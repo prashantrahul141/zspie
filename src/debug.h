@@ -15,6 +15,20 @@ void disassemble_chunk(Chunk *m_chunk, const char *m_name);
  * @param Pointer to the chunk.
  * @param offset of the instruction in chunk.
  */
-size_t isassemble_instruction(Chunk *m_chunk, size_t m_offset);
+size_t disassemble_instruction(Chunk *m_chunk, size_t m_offset);
+
+/**
+ * Prints name and offset of a simple instruction.
+ * @param name
+ * @param offset
+ */
+size_t simple_instruction(const char *name, size_t offset);
+
+/**
+ * Debug outputs a constant instruction.
+ * @param chunk
+ * @param offset
+ */
+size_t constant_instruction(const char *name, Chunk *chunk, size_t offset);
 
 #endif // !ZSPIE_DEBUG_H_
