@@ -1,12 +1,18 @@
 #include "memory.h"
 
-void *reallocate(void *pointer, size_t old_size, size_t new_size) {
+void *reallocate(void *m_pointer, size_t m_old_size, size_t m_new_size) {
+  log_trace("Called reallocate with %d %d %d", m_pointer, m_old_size,
+            m_new_size);
   // free up the allocated memory if new_size is 0.
-  if (new_size == 0) {
-    free(pointer);
+  if (m_new_size == 0) {
+    free(m_pointer);
     return NULL;
   }
 
   // reallocate and return new pointer.
-  return realloc(pointer, new_size);
+  void *new_allocation = realloc(m_pointer, m_new_size);
+  if (new_allocation == NULL) {
+    exit(1);
+  }
+  return new_allocation;
 }
