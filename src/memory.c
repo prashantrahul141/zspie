@@ -1,8 +1,8 @@
 #include "memory.h"
 
 void *reallocate(void *m_pointer, size_t m_old_size, size_t m_new_size) {
-  log_trace("Called reallocate with %d %d %d", m_pointer, m_old_size,
-            m_new_size);
+  log_trace("Called reallocate with pointer: %d, old_size: %d, new_size : %d",
+            m_pointer, m_old_size, m_new_size);
   // free up the allocated memory if new_size is 0.
   if (m_new_size == 0) {
     free(m_pointer);
