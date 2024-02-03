@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 # default build type will be Debug, if nothing is specified.
-set(default_build_type "Debug")
+set(default_build_type "Release")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -11,12 +11,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   # Set the possible values of build type for cmake-gui
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
-
-# Debug only flags
-set(CMAKE_C_FLAGS_DEBUG_INIT "")
-
-# release only flags
-set(CMAKE_C_FLAGS_RELEASE_INIT "-s")
 
 # project name.
 project(zspie)
@@ -34,17 +28,36 @@ include_directories(${PROJECT_NAME} PRIVATE src/ src/external/)
 # macros
 add_compile_definitions(LOG_USE_COLOR)
 
-# compiler flags
-if(MSVC)
-  # msvc related flags
-  add_compile_options(/W4 /WX)
-else()
-  # gcc and clang 
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+
+# compiler flags
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  # msvc related flags
+
+  set(MSVC_COMPILE_OPTIONS "/W4;/WX;")
+
+  # debug only
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${MSVC_COMPILE_OPTIONS}>")
+
+  # release only
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${MSVC_COMPILE_OPTIONS}>")
+
+else()
+  # gcc and clang 
+  set(GCC_COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;")
+  set(GCC_COMPILE_OPTIONS_RELEASE "-O3;-s;")
+
+  # debug only
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${GCC_COMPILE_OPTIONS}>")
+
+  # release only
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${GCC_COMPILE_OPTIONS}${GCC_COMPILE_OPTIONS_RELEASE}>")
+
+endif()
+
+
 # linking libs
 target_link_libraries(${PROJECT_NAME} PRIVATE)
+
