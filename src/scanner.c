@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include "external/log.h"
+#include <cinttypes>
 #include <string.h>
 
 /*
@@ -144,6 +145,28 @@ static void skin_whitespaces() {
 }
 
 /*
+ * Scans a whole string.
+ * @returns token - the scanned string token sca
+ */
+
+static Token scan_string() {
+  while (peek() != '"' && !is_at_end()) {
+    if (peek() == '\n') {
+      scanner.line++;
+    }
+    advance();
+  }
+
+  if (is_at_end()) {
+    return error_token("Unterminated string.");
+  }
+
+  // consuming the closing quote.
+  advance();
+  return make_token(TOKEN_STRING);
+}
+
+/*
  * Scans one token at a time and returns it.
  * @returns token the scanned token.
  */
@@ -222,5 +245,9 @@ Token scan_token() {
   case '>':
     // >= or >
     return make_token(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+
+    // strings!
+  case '"':
+    return scan_string();
   }
 }
