@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "chunk.h"
+#include "compiler.h"
 #include "external/log.h"
 #include "value.h"
 #include <stdint.h>
@@ -17,12 +18,14 @@ void init_vm() { reset_vm_stack(); }
 void free_vm() {}
 
 void push(Value value) {
+  log_trace("pushing value=%lf to stack.");
   *vm.stack_top = value;
   vm.stack_top++;
 }
 
 Value pop() {
   vm.stack_top--;
+  log_trace("poping value=%lf from stack.", *vm.stack_top);
   return *vm.stack_top;
 }
 
@@ -101,8 +104,12 @@ static InterpretResult run() {
 #undef BINARY_OP
 }
 
-InterpretResult interpret(Chunk *chunk) {
-  vm.chunk = chunk;
-  vm.ip = vm.chunk->code;
-  return run();
+/*
+ * Takes source string, compiles it and run its.
+ * @param source pointer to source strings.
+ * @returns InterpretResult
+ */
+InterpretResult interpret(const char *source) {
+  compile(source);
+  return INTERPRET_OK;
 }
