@@ -93,6 +93,11 @@ static bool match(char expected) {
 static char peek() { return *scanner.current; }
 
 /*
+ * checks if the given char is a number or not
+ */
+static bool is_digit(char c) { return c >= '0' && c <= '9'; }
+
+/*
  * Returns the next + 1character in source without consuming it.
  */
 static char peek_next() {
@@ -167,6 +172,24 @@ static Token scan_string() {
 }
 
 /*
+ * Scans numbers
+ */
+static Token scan_number() {
+  while (is_digit(peek())) {
+    advance();
+  }
+
+  // the floating point part.
+  if (peek() == '.' && is_digit(peek_next())) {
+    while (is_digit(peek())) {
+      advance();
+    }
+  }
+
+  return make_token(TOKEN_NUMBER);
+}
+
+/*
  * Scans one token at a time and returns it.
  * @returns token the scanned token.
  */
@@ -180,6 +203,11 @@ Token scan_token() {
 
   // current char.
   char c = advance();
+
+  // numbers
+  if (is_digit(c)) {
+    return scan_number();
+  }
 
   switch (c) {
   // (
