@@ -46,7 +46,7 @@ void free_vm();
 /*
  * Wrapper around run, to make it easier to keep state and init execution.
  */
-InterpretResult interpret(Chunk *chunk);
+InterpretResult interpret(const char *source);
 
 /*
  * stack operations for our vm: pushing
