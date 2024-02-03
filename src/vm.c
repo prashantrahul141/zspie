@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "chunk.h"
+#include "external/log.h"
 #include "value.h"
 #include <stdint.h>
 
@@ -8,9 +9,22 @@
  */
 VM vm;
 
-void init_vm() {}
+// resets vm's stack.
+void reset_vm_stack() { vm.stack_top = vm.stack; }
+
+void init_vm() { reset_vm_stack(); }
 
 void free_vm() {}
+
+void push(Value value) {
+  *vm.stack_top = value;
+  vm.stack_top++;
+}
+
+Value pop() {
+  vm.stack_top--;
+  return *vm.stack_top;
+}
 
 /*
  * Heart of our interpreter execution logic.
@@ -20,21 +34,63 @@ static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 // reads a constant from the chunk
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+// macros for solving binary operations
+#define BINARY_OP(op)                                                          \
+  do {                                                                         \
+    double b = pop();                                                          \
+    double a = pop();                                                          \
+    push(a op b);                                                              \
+  } while (false)
 
   // goes forever.
   while (true) {
+    // previous instruction which ran.
     uint8_t instruction;
+
+    log_trace("current state of the stack:");
+    for (Value *slot = vm.stack; slot < vm.stack_top; slot++) {
+      log_trace("[ %g ]", *slot);
+    }
+    log_trace("previous instruction=%d", instruction);
+
     switch (instruction = READ_BYTE()) {
     // op_constant instruction.
     case OP_CONSTANT: {
       Value constant = READ_CONSTANT();
-      print_value(constant);
-      printf("\n");
+      push(constant);
+      break;
+    }
+
+    // binary operation +
+    case OP_ADD:
+      BINARY_OP(+);
+      break;
+
+    // binary operation -
+    case OP_SUBTRACT:
+      BINARY_OP(-);
+      break;
+
+    // binary operation *
+    case OP_MULTIPLY:
+      BINARY_OP(*);
+      break;
+
+    // binary operation /
+    case OP_DIVIDE:
+      BINARY_OP(/);
+      break;
+
+    // op_negate instruction.
+    case OP_NEGATE: {
+      push(-pop());
       break;
     }
 
       // op_return instruction.
     case OP_RETURN: {
+      print_value(pop());
+      printf("\n");
       return INTERPRET_OK;
     }
     }
@@ -42,6 +98,7 @@ static InterpretResult run() {
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef BINARY_OP
 }
 
 InterpretResult interpret(Chunk *chunk) {
