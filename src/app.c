@@ -72,7 +72,7 @@ static void run_file(const char *filepath) {
   }
 }
 
-void handle_cli(int argc, const char *argv[]) {
+void handle_cli(size_t argc, const char *argv[]) {
   log_debug("Handling cli");
   log_debug("arg=%d  argv:", argc);
   for (size_t i = 0; i < argc; i++) {
