@@ -120,17 +120,21 @@ static void skip_whitespaces() {
   while (true) {
     char c = peek();
     switch (c) {
-
     // all whitespace characters
     case ' ':
     case '\t':
-    case '\r': {
+    case '\r':
       advance();
       break;
-    }
+
+    // newline character
+    case '\n':
+      scanner.line++;
+      advance();
+      break;
 
     // comments
-    case '/': {
+    case '/':
       if (peek_next() == '/') {
         while (peek() != '\n' && !is_at_end()) {
           advance();
@@ -139,14 +143,6 @@ static void skip_whitespaces() {
         return;
       }
       break;
-    }
-
-    // newline character
-    case '\n': {
-      scanner.line++;
-      advance();
-      return;
-    }
 
     // non whitespace character.
     default:
@@ -229,10 +225,6 @@ static TokenType identifier_type() {
   case 'e':
     return match_keyword(1, 3, "lse", TOKEN_ELSE);
 
-    // if
-  case 'i':
-    return match_keyword(1, 1, "f", TOKEN_IF);
-
   // f
   case 'f': {
     if (scanner.current - scanner.start > 1) {
@@ -252,9 +244,13 @@ static TokenType identifier_type() {
     break;
   }
 
+    // if
+  case 'i':
+    return match_keyword(1, 1, "f", TOKEN_IF);
+
     // null
   case 'n':
-    return match_keyword(1, 2, "ull", TOKEN_NULL);
+    return match_keyword(1, 3, "ull", TOKEN_NULL);
 
     // or
   case 'o':
@@ -293,6 +289,7 @@ static TokenType identifier_type() {
     return match_keyword(1, 4, "hile", TOKEN_WHILE);
   }
 
+  // keywords
   return TOKEN_IDENTIFIER;
 }
 
@@ -312,6 +309,8 @@ static Token scan_identifier() {
  * @returns token the scanned token.
  */
 Token scan_token() {
+  skip_whitespaces();
+
   scanner.start = scanner.current;
 
   // return an EOF token if reached the end of the source string.
@@ -332,7 +331,6 @@ Token scan_token() {
     return scan_number();
   }
 
-  skip_whitespaces();
   switch (c) {
   // (
   case '(':
@@ -403,5 +401,5 @@ Token scan_token() {
     return scan_string();
   }
 
-  return error_token("Unrecognised character.");
+  return error_token("Unexpected character.");
 }
