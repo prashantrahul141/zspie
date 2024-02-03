@@ -1,6 +1,5 @@
 #include "scanner.h"
 #include "external/log.h"
-#include <cinttypes>
 #include <string.h>
 
 /*
@@ -98,6 +97,13 @@ static char peek() { return *scanner.current; }
 static bool is_digit(char c) { return c >= '0' && c <= '9'; }
 
 /*
+ * checks if the given char is ascii alphabetic or not
+ */
+static bool is_alpha(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+/*
  * Returns the next + 1character in source without consuming it.
  */
 static char peek_next() {
@@ -110,7 +116,7 @@ static char peek_next() {
 /*
  * Skips all whitespaces characters.
  */
-static void skin_whitespaces() {
+static void skip_whitespaces() {
   while (true) {
     char c = peek();
     switch (c) {
@@ -129,10 +135,10 @@ static void skin_whitespaces() {
         while (peek() != '\n' && !is_at_end()) {
           advance();
         }
-
       } else {
         return;
       }
+      break;
     }
 
     // newline character
@@ -188,6 +194,118 @@ static Token scan_number() {
 
   return make_token(TOKEN_NUMBER);
 }
+/*
+ * little utility to check if the current token lexem matches the input string.
+ * @param start - start of the strings inside scanner state.
+ * @param length - length of the matching strings
+ * @param expected - the expected string matching against.
+ * @param type - TokenType to return if the matching succeeds
+ */
+static bool match_keyword(int start, int length, const char *expected,
+                          TokenType type) {
+
+  if (scanner.current - scanner.start == start + length &&
+      memcmp(scanner.start + start, expected, length) == 0) {
+    return type;
+  }
+
+  return TOKEN_IDENTIFIER;
+}
+
+/*
+ * Determines the indentifiers type
+ */
+static TokenType identifier_type() {
+  switch (scanner.start[0]) {
+    // and
+  case 'a':
+    return match_keyword(1, 2, "nd", TOKEN_AND);
+
+    // class
+  case 'c':
+    return match_keyword(1, 4, "lass", TOKEN_CLASS);
+
+    // else
+  case 'e':
+    return match_keyword(1, 3, "lse", TOKEN_ELSE);
+
+    // if
+  case 'i':
+    return match_keyword(1, 1, "f", TOKEN_IF);
+
+  // f
+  case 'f': {
+    if (scanner.current - scanner.start > 1) {
+      switch (scanner.start[1]) {
+      // false
+      case 'a':
+        return match_keyword(2, 3, "lse", TOKEN_FALSE);
+
+      // for
+      case 'o':
+        return match_keyword(2, 1, "r", TOKEN_FOR);
+      }
+
+      // fn
+      return match_keyword(1, 1, "n", TOKEN_FN);
+    }
+    break;
+  }
+
+    // null
+  case 'n':
+    return match_keyword(1, 2, "ull", TOKEN_NULL);
+
+    // or
+  case 'o':
+    return match_keyword(1, 1, "r", TOKEN_OR);
+
+    // print
+  case 'p':
+    return match_keyword(1, 4, "rint", TOKEN_PRINT);
+
+    // return
+  case 'r':
+    return match_keyword(1, 5, "eturn", TOKEN_RETURN);
+
+    // super
+  case 's':
+    return match_keyword(1, 4, "uper", TOKEN_SUPER);
+
+  case 't': {
+    if (scanner.current - scanner.start > 1) {
+      switch (scanner.start[1]) {
+      case 'h':
+        return match_keyword(2, 2, "is", TOKEN_THIS);
+      case 'r':
+        return match_keyword(2, 2, "ue", TOKEN_TRUE);
+      }
+    }
+    break;
+  }
+
+    // let
+  case 'l':
+    return match_keyword(1, 2, "et", TOKEN_LET);
+
+    // while
+  case 'w':
+    return match_keyword(1, 4, "hile", TOKEN_WHILE);
+  }
+
+  return TOKEN_IDENTIFIER;
+}
+
+/*
+ * Scans identifiers
+ */
+static Token scan_identifier() {
+  while (is_alpha(peek()) || is_digit(peek())) {
+    advance();
+  }
+
+  return make_token(identifier_type());
+}
 
 /*
  * Scans one token at a time and returns it.
@@ -204,11 +322,17 @@ Token scan_token() {
   // current char.
   char c = advance();
 
+  // indentifiers and keywords.
+  if (is_alpha(c)) {
+    return scan_identifier();
+  }
+
   // numbers
   if (is_digit(c)) {
     return scan_number();
   }
 
+  skip_whitespaces();
   switch (c) {
   // (
   case '(':
@@ -278,4 +402,6 @@ Token scan_token() {
   case '"':
     return scan_string();
   }
+
+  return error_token("Unrecognised character.");
 }
