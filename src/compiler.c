@@ -12,12 +12,14 @@ void compile(const char *source) {
     Token token = scan_token();
     if (token.line != line) {
       line = token.line;
-      printf("%4zu", line);
+      log_debug("%4zu ", line);
     } else {
-      printf("   | ");
+      log_debug("   | ");
     }
 
-    printf("%2d %*s", token.type, (int)token.length, token.start);
+    log_debug("Scanned token type=%d", token.type);
+
+    log_debug("%2d '%.*s'\n", token.type, (int)token.length, token.start);
 
     if (token.type == TOKEN_EOF) {
       break;
