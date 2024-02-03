@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
-# default build type will be Release, if nothing is specified.
-set(default_build_type "Release")
+# default build type will be Debug, if nothing is specified.
+set(default_build_type "Debug")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -12,6 +12,12 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# Debug only flags
+set(CMAKE_C_FLAGS_DEBUG_INIT "")
+
+# release only flags
+set(CMAKE_C_FLAGS_RELEASE_INIT "-s")
+
 # project name.
 project(zspie)
 
@@ -20,7 +26,7 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # all source files.
-file(GLOB SOURCES src/external/log.c src/chunk.c src/memory.c src/debug.c src/value.c src/main.c)
+file(GLOB SOURCES src/external/log.c src/chunk.c src/memory.c src/debug.c src/value.c src/vm.c src/main.c)
 
 # include dir
 include_directories(${PROJECT_NAME} PRIVATE src/ src/external/)
