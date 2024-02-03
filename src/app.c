@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 static void repl() {
-  log_debug("starting up repl");
+  log_info("starting up repl");
 
   char line[1024];
   while (true) {
@@ -20,11 +20,12 @@ static void repl() {
 }
 
 static char *read_file(const char *filepath) {
-  log_debug("reading contents from file : %s", filepath);
+  log_info("reading contents from file : %s", filepath);
   FILE *file = fopen(filepath, "rb");
 
   if (file == NULL) {
     fprintf(stderr, "Couldn't open file : '%s'\n", filepath);
+    log_error("Couldn't open file : '%s'\n", filepath);
     exit(74);
   }
 
@@ -35,19 +36,21 @@ static char *read_file(const char *filepath) {
   char *file_buffer = (char *)malloc(file_size + 1);
   if (file_buffer == NULL) {
     fprintf(stderr, "Couldn't allocate memory for file\n");
+    log_error("Couldn't allocate memory for file.");
     exit(74);
   }
   size_t bytes_read = fread(file_buffer, sizeof(char), file_size, file);
 
   if (bytes_read < file_size) {
     fprintf(stderr, "Could not read file : '%s'", filepath);
+    log_error("Could not read file : '%s'", filepath);
     exit(74);
   }
 
   file_buffer[bytes_read] = '\0';
   fclose(file);
 
-  log_debug("read file successfully, length=%d source=%s", file_size,
+  log_debug("read file successfully, length=%d source=\n%s", file_size,
             file_buffer);
 
   return file_buffer;
@@ -73,10 +76,10 @@ static void run_file(const char *filepath) {
 }
 
 void handle_cli(size_t argc, const char *argv[]) {
-  log_debug("Handling cli");
-  log_debug("arg=%d  argv:", argc);
+  log_info("Handling cli");
+  log_info("arg=%d  argv:", argc);
   for (size_t i = 0; i < argc; i++) {
-    log_debug("%s", argv[i]);
+    log_debug("[ %s ]", argv[i]);
   }
 
   if (argc == 1) {

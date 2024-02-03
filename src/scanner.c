@@ -18,7 +18,7 @@ typedef struct {
 Scanner scanner;
 
 void init_scanner(const char *source) {
-  log_debug("initialising scanner..");
+  log_info("initialising scanner..");
   scanner.start = source;
   scanner.current = source;
   scanner.line = 1;
@@ -39,6 +39,8 @@ static Token make_token(TokenType type) {
                  .length = (int)(scanner.current - scanner.start),
                  .line = scanner.line};
 
+  log_trace("making new token : type=%d, start=%.*s, line=%d", type,
+            token.length, token.start, token.line);
   return token;
 }
 
@@ -55,6 +57,8 @@ static Token error_token(const char *message) {
 
   };
 
+  log_error("making new ERROR token : start=%*s, line=%d", token.length,
+            token.start, token.line);
   return token;
 }
 
@@ -74,6 +78,8 @@ static char advance() {
  * @returns match - if they match or not.
  */
 static bool match(char expected) {
+  log_trace("matching for %c aganinst expected=%c", *scanner.current, expected);
+
   if (is_at_end()) {
     return false;
   }
@@ -127,8 +133,9 @@ static void skip_whitespaces() {
       advance();
       break;
 
-    // newline character
+      // newline character
     case '\n':
+      log_trace("found newline, incrementing newline counter.");
       scanner.line++;
       advance();
       break;
@@ -157,6 +164,8 @@ static void skip_whitespaces() {
  */
 
 static Token scan_string() {
+  log_trace("scanning for string token");
+
   while (peek() != '"' && !is_at_end()) {
     if (peek() == '\n') {
       scanner.line++;
@@ -165,8 +174,12 @@ static Token scan_string() {
   }
 
   if (is_at_end()) {
+    log_error("found unterminated string.");
     return error_token("Unterminated string.");
   }
+
+  log_trace("scanned string : '%*s'", (int)(scanner.current - scanner.start),
+            scanner.current);
 
   // consuming the closing quote.
   advance();
@@ -177,6 +190,7 @@ static Token scan_string() {
  * Scans numbers
  */
 static Token scan_number() {
+  log_trace("scanning for number token");
   while (is_digit(peek())) {
     advance();
   }
@@ -187,6 +201,9 @@ static Token scan_number() {
       advance();
     }
   }
+
+  log_trace("scanned number : '%.*s'", (int)(scanner.current - scanner.start),
+            scanner.start);
 
   return make_token(TOKEN_NUMBER);
 }
@@ -297,11 +314,14 @@ static TokenType identifier_type() {
  * Scans identifiers
  */
 static Token scan_identifier() {
+  log_trace("scanning indentifier");
   while (is_alpha(peek()) || is_digit(peek())) {
     advance();
   }
 
-  return make_token(identifier_type());
+  TokenType type = identifier_type();
+  log_trace("indentifier type : %d", type);
+  return make_token(type);
 }
 
 /*
@@ -309,17 +329,20 @@ static Token scan_identifier() {
  * @returns token the scanned token.
  */
 Token scan_token() {
+  log_trace("called scan_token");
   skip_whitespaces();
 
   scanner.start = scanner.current;
 
   // return an EOF token if reached the end of the source string.
   if (is_at_end()) {
+    log_trace("reached end of source file");
     return make_token(TOKEN_EOF);
   }
 
   // current char.
   char c = advance();
+  log_trace("current char : %c", c);
 
   // indentifiers and keywords.
   if (is_alpha(c)) {
