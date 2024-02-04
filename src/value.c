@@ -1,6 +1,24 @@
 #include "value.h"
 #include "external/log.h"
 #include "memory.h"
+#include <stdio.h>
+
+bool values_equal(Value a, Value b) {
+  if (a.type != b.type) {
+    return false;
+  }
+
+  switch (a.type) {
+  case VAL_BOOL:
+    return AS_BOOL(a) == AS_BOOL(b);
+  case VAL_NULL:
+    return true;
+  case VAL_NUMBER:
+    return AS_NUMBER(a) == AS_NUMBER(b);
+  default:
+    return false; // unreachable.
+  }
+}
 
 void init_value_array(ValueArray *value_array) {
   log_trace("initalizing value array *value_array=%p", value_array);
@@ -34,4 +52,19 @@ void free_value_array(ValueArray *value_array) {
   init_value_array(value_array);
 }
 
-void print_value(Value value) { printf("'%g'", value); }
+void print_value(Value value) {
+  switch (value.type) {
+
+  case VAL_BOOL:
+    printf(AS_BOOL(value) ? "true" : "false");
+    break;
+
+  case VAL_NULL:
+    printf("null");
+    break;
+
+  case VAL_NUMBER:
+    printf("'%g'", AS_NUMBER(value));
+    break;
+  }
+}
