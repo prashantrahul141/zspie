@@ -36,27 +36,32 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # msvc related flags
 
-  set(MSVC_COMPILE_OPTIONS "/W4;/WX;")
-  set(MSVC_COMPILE_OPTIONS_DEBUG "/DZSPIE_DEBUG_MODE;")
+  set(MSVC_COMPILE_OPTIONS "/W4;/WX")
+  set(MSVC_COMPILE_OPTIONS_DEBUG "${MSVC_COMPILE_OPTIONS};/DZSPIE_DEBUG_MODE;")
+  set(MSVC_COMPILE_OPTIONS_RELEASE "${MSVC_COMPILE_OPTIONS};/O2;")
 
+  # debug
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${MSVC_COMPILE_OPTIONS_DEBUG}>")
 
-  # debug only
-  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${MSVC_COMPILE_OPTIONS}${MSVC_COMPILE_OPTIONS_DEBUG}>")
-
-  # release only
-  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${MSVC_COMPILE_OPTIONS}>")
+  # release
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${MSVC_COMPILE_OPTIONS_RELEASE}>")
 
 else()
   # gcc and clang 
-  set(GCC_COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;")
-  set(GCC_COMPILE_OPTIONS_RELEASE "-O3;-s;")
-  set(GCC_COMPILE_OPTIONS_DEBUG "-DZSPIE_DEBUG_MODE;")
+  set(GCC_COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic")
+  set(GCC_COMPILE_OPTIONS_DEBUG "${GCC_COMPILE_OPTIONS};-DZSPIE_DEBUG_MODE;")
+  set(GCC_COMPILE_OPTIONS_RELEASE "${GCC_COMPILE_OPTIONS};-O3;")
 
-  # debug only
-  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${GCC_COMPILE_OPTIONS}${GCC_COMPILE_OPTIONS_DEBUG}>")
+  # debug
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${GCC_COMPILE_OPTIONS_DEBUG}>")
 
-  # release only
-  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${GCC_COMPILE_OPTIONS}${GCC_COMPILE_OPTIONS_RELEASE}>")
+  # release
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${GCC_COMPILE_OPTIONS_RELEASE}>")
+
+  # Linker flags.
+  set(GCC_LINK_OPTIONS_RELEASE "-s;-static;")
+
+  target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${GCC_LINK_OPTIONS_RELEASE}>")
 
 endif()
 
