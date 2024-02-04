@@ -107,6 +107,8 @@ static void error_at_current(const char *message) {
  * stores current token in previous, consume new token and stores it.
  */
 static void advance() {
+  log_trace("advancing parser.current=%d, parser.previous=%d", parser.current,
+            parser.previous);
   parser.previous = parser.current;
   while (true) {
     parser.current = scan_token();
@@ -125,6 +127,8 @@ static void advance() {
  * @param message - Error message
  */
 static void consume(TokenType type, const char *message) {
+  log_trace("consuming type=%d with message=%s", type, message);
+
   if (parser.current.type == type) {
     advance();
     return;
@@ -138,6 +142,7 @@ static void consume(TokenType type, const char *message) {
  * @param byte - The byte to write.
  */
 static void emit_byte(uint8_t byte) {
+  log_debug("emiting byte=%d", byte);
   write_chunk(current_chunk(), byte, parser.previous.line);
 }
 
@@ -160,6 +165,7 @@ static void emit_return() { emit_byte(OP_RETURN); }
  * @return index of the constant in stack.
  */
 static uint8_t make_constant(Value value) {
+  log_debug("making constant with value=%lf", value);
   size_t constant_index = add_constant_to_chunk(current_chunk(), value);
 
   if (constant_index > UINT8_MAX) {
@@ -183,7 +189,6 @@ static void emit_constant(Value value) {
  */
 static void end_compiler() {
   emit_return();
-
 // some logging .
 #ifdef ZSPIE_DEBUG_MODE
   if (!parser.has_error) {
@@ -203,8 +208,9 @@ static ParseRule *get_rule(TokenType type);
  * @param precedence - precedence to consider.
  */
 static void parse_precedence(Precedence precedence) {
-  // consuming prefix of the token.
+  log_trace("parsing precedence with precedence=%d", precedence);
 
+  // consuming prefix of the token.
   advance();
   ParseFn prefix_rule = get_rule(parser.previous.type)->prefix;
   if (prefix_rule == NULL) {
@@ -228,6 +234,8 @@ static void parse_precedence(Precedence precedence) {
  * Parses binary expressions.
  */
 static void binary() {
+  log_trace("parsing binary expression");
+
   TokenType operator_type = parser.previous.type;
   ParseRule *rule = get_rule(operator_type);
   parse_precedence((Precedence)(rule->precedence + 1));
@@ -258,6 +266,7 @@ static void binary() {
  * Parses number literals.
  */
 static void number() {
+  log_trace("parsing number expression");
   double value = strtod(parser.previous.start, NULL);
   emit_constant(value);
 }
@@ -265,12 +274,17 @@ static void number() {
 /*
  * Parses expression.
  */
-static void expression() { parse_precedence(PREC_ASSIGNMENT); }
+static void expression() {
+  log_trace("parsing expression");
+  parse_precedence(PREC_ASSIGNMENT);
+}
 
 /*
  * Parses unary expression.
  */
 static void unary() {
+  log_trace("parsing unary expression");
+
   TokenType operator_type = parser.previous.type;
 
   parse_precedence(PREC_UNARY);
@@ -290,6 +304,7 @@ static void unary() {
  * parses grouping expression.
  */
 static void grouping() {
+  log_trace("parsing grouping expression");
   expression();
   consume(TOKEN_RIGHT_PAREN, "Expected ')' after expression.");
 }
