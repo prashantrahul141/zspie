@@ -3,12 +3,46 @@
 
 #include "common.h"
 
-/**
- * Our abstraction layer of c's double.
+/*
+ * All builtin types of zspie.
  */
-typedef double Value;
+typedef enum {
+  // booleans
+  VAL_BOOL,
+  // nulls
+  VAL_NULL,
+  // numbers
+  VAL_NUMBER,
+} ValueType;
 
-/** ValueArray
+/**
+ * Our abstraction layer for values mapped to c types.
+ */
+typedef struct {
+  ValueType type;
+  union {
+    bool boolean;
+    double number;
+  } as;
+} Value;
+
+bool values_equal(Value a, Value b);
+
+// Some helper macros to convert C values to Zspie's Values.
+#define BOOL_VAL(value) ((Value){VAL_BOOL, {.boolean = value}}) // for booleans
+#define NULL_VAL ((Value){VAL_NULL, {.number = 0}})             // for nulls
+#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}}) // for number
+
+// Some helpers to unpack Zspie's value into C types.
+#define AS_BOOL(value) ((value).as.boolean)
+#define AS_NUMBER(value) ((value).as.number)
+
+// helpers macros to check to check type of a Value.
+#define IS_BOOL(value) ((value).type == VAL_BOOL)
+#define IS_NUMBER(value) ((value).type == VAL_NUMBER)
+#define IS_NULL(value) ((value).type == VAL_NULL)
+
+/* ValueArray
  * This holds a dynamic array of values present in a chunk of instructions.
  */
 typedef struct {
