@@ -8,6 +8,4 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ZSPIE_DEBUG_MODE
-
 #endif // ZSPIE_COMMON_H_

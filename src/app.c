@@ -69,7 +69,7 @@ static void run_file(const char *filepath) {
     exit(65);
   }
 
-  if (result == INTERPRET_RUNTIME_ERRR) {
+  if (result == INTERPRET_RUNTIME_ERROR) {
     log_error("Found runtime error exiting exit code with 70");
     exit(70);
   }
