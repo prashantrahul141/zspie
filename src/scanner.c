@@ -214,8 +214,14 @@ static Token scan_number() {
  * @param expected - the expected string matching against.
  * @param type - TokenType to return if the matching succeeds
  */
-static bool match_keyword(int start, int length, const char *expected,
-                          TokenType type) {
+static TokenType match_keyword(int start, int length, const char *expected,
+                               TokenType type) {
+
+  log_trace("matching keyword=%.*s, expected=%s", length + 1, scanner.start + 1,
+            expected);
+
+  log_trace("scanner.current - scanner.start = %d .. start + length = %d",
+            scanner.current - scanner.start, start + length);
 
   if (scanner.current - scanner.start == start + length &&
       memcmp(scanner.start + start, expected, length) == 0) {
