@@ -3,7 +3,9 @@
 #include "compiler.h"
 #include "external/log.h"
 #include "value.h"
+#include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 
 /*
  * Global, static VM object for our interpreter.
@@ -12,6 +14,27 @@ VM vm;
 
 // resets vm's stack.
 void reset_vm_stack() { vm.stack_top = vm.stack; }
+
+/*
+ * Reports a runtime error
+ */
+static void runtime_error(const char *format, ...) {
+  // report error.
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  log_error(format, args);
+  va_end(args);
+  fputs("\n", stderr);
+
+  // the instruction which caused runtime error.
+  size_t instruction = vm.ip - vm.chunk->code - 1;
+  // line number of that instruction.
+  size_t line = vm.chunk->lines[instruction];
+  fprintf(stderr, "[line %zu] in script\n", line);
+  log_error("[line %zu] in script\n", line);
+  reset_vm_stack();
+}
 
 void init_vm() { reset_vm_stack(); }
 
@@ -29,30 +52,50 @@ Value pop() {
   return *vm.stack_top;
 }
 
+Value peek(size_t distance) { return vm.stack_top[-1 - distance]; }
+
+bool is_falsey(Value value) {
+  switch (value.type) {
+  case VAL_BOOL:
+    return !AS_BOOL(value);
+  case VAL_NULL:
+    return false;
+  case VAL_NUMBER:
+    return AS_NUMBER(value) != 0;
+  }
+
+  return false;
+}
+
 /*
  * Heart of our interpreter execution logic.
  */
 static InterpretResult run() {
   // reads the current next instruction and increments the ip.
 #define READ_BYTE() (*vm.ip++)
+
 // reads a constant from the chunk
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+
 // macros for solving binary operations
-#define BINARY_OP(op)                                                          \
+#define BINARY_OP(value_type, op)                                              \
   do {                                                                         \
-    double b = pop();                                                          \
-    double a = pop();                                                          \
-    push(a op b);                                                              \
+    if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {                          \
+      runtime_error("Operands must be number.");                               \
+      return INTERPRET_RUNTIME_ERROR;                                          \
+    }                                                                          \
+    double b = AS_NUMBER(pop());                                               \
+    double a = AS_NUMBER(pop());                                               \
+    push(value_type(a op b));                                                  \
   } while (false)
 
+  // previous instruction which ran.
+  uint8_t instruction = 0;
   // goes forever.
   while (true) {
-    // previous instruction which ran.
-    uint8_t instruction;
-
     log_trace("current state of the stack:");
     for (Value *slot = vm.stack; slot < vm.stack_top; slot++) {
-      log_trace("[ %g ]", *slot);
+      log_trace("[ type=%d, value=%d ]", slot->type, slot->as);
     }
     log_trace("previous instruction=%d", instruction);
 
@@ -64,29 +107,70 @@ static InterpretResult run() {
       break;
     }
 
+    case OP_NULL: {
+      push(NULL_VAL);
+      break;
+    }
+
+    case OP_TRUE: {
+      push(BOOL_VAL(true));
+      break;
+    }
+
+    case OP_FALSE: {
+      push(BOOL_VAL(false));
+      break;
+    }
+
+    case OP_EQUAL: {
+      Value b = pop();
+      Value a = pop();
+      push(BOOL_VAL(values_equal(a, b)));
+      break;
+    }
+
+    case OP_GREATER: {
+      BINARY_OP(BOOL_VAL, >);
+      break;
+    }
+
+    case OP_LESS: {
+      BINARY_OP(BOOL_VAL, <);
+      break;
+    }
+
     // binary operation +
     case OP_ADD:
-      BINARY_OP(+);
+      BINARY_OP(NUMBER_VAL, +);
       break;
 
     // binary operation -
     case OP_SUBTRACT:
-      BINARY_OP(-);
+      BINARY_OP(NUMBER_VAL, -);
       break;
 
     // binary operation *
     case OP_MULTIPLY:
-      BINARY_OP(*);
+      BINARY_OP(NUMBER_VAL, *);
       break;
 
     // binary operation /
     case OP_DIVIDE:
-      BINARY_OP(/);
+      BINARY_OP(NUMBER_VAL, /);
+      break;
+
+      // not operation !
+    case OP_NOT:
+      push(BOOL_VAL(is_falsey(pop())));
       break;
 
     // op_negate instruction.
     case OP_NEGATE: {
-      push(-pop());
+      if (!IS_NUMBER(peek(0))) {
+        runtime_error("Operand must be a number.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      push(NUMBER_VAL(-AS_NUMBER(pop())));
       break;
     }
 
