@@ -37,9 +37,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # msvc related flags
 
   set(MSVC_COMPILE_OPTIONS "/W4;/WX;")
+  set(MSVC_COMPILE_OPTIONS_DEBUG "/DZSPIE_DEBUG_MODE;")
+
 
   # debug only
-  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${MSVC_COMPILE_OPTIONS}>")
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${MSVC_COMPILE_OPTIONS}${MSVC_COMPILE_OPTIONS_DEBUG}>")
 
   # release only
   target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${MSVC_COMPILE_OPTIONS}>")
@@ -48,9 +50,10 @@ else()
   # gcc and clang 
   set(GCC_COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;")
   set(GCC_COMPILE_OPTIONS_RELEASE "-O3;-s;")
+  set(GCC_COMPILE_OPTIONS_DEBUG "-DZSPIE_DEBUG_MODE;")
 
   # debug only
-  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${GCC_COMPILE_OPTIONS}>")
+  target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:DEBUG>:${GCC_COMPILE_OPTIONS}${GCC_COMPILE_OPTIONS_DEBUG}>")
 
   # release only
   target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${GCC_COMPILE_OPTIONS}${GCC_COMPILE_OPTIONS_RELEASE}>")
