@@ -3,6 +3,9 @@
 
 #include "common.h"
 
+typedef struct Obj Obj;
+typedef struct ObjString ObjString;
+
 /*
  * All builtin types of zspie.
  */
@@ -13,6 +16,8 @@ typedef enum {
   VAL_NULL,
   // numbers
   VAL_NUMBER,
+  // objects like strings, functions, classes.
+  VAL_OBJ,
 } ValueType;
 
 /**
@@ -23,6 +28,7 @@ typedef struct {
   union {
     bool boolean;
     double number;
+    Obj *obj;
   } as;
 } Value;
 
@@ -32,15 +38,19 @@ bool values_equal(Value a, Value b);
 #define BOOL_VAL(value) ((Value){VAL_BOOL, {.boolean = value}}) // for booleans
 #define NULL_VAL ((Value){VAL_NULL, {.number = 0}})             // for nulls
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}}) // for number
+#define OBJ_VAL(object)                                                        \
+  ((Value){VAL_OBJ, {.obj = (Obj *)object}}) // for objects.
 
 // Some helpers to unpack Zspie's value into C types.
 #define AS_BOOL(value) ((value).as.boolean)
 #define AS_NUMBER(value) ((value).as.number)
+#define AS_OBJ(value) ((value).as.obj)
 
 // helpers macros to check to check type of a Value.
 #define IS_BOOL(value) ((value).type == VAL_BOOL)
 #define IS_NUMBER(value) ((value).type == VAL_NUMBER)
 #define IS_NULL(value) ((value).type == VAL_NULL)
+#define IS_OBJ(value) ((value).type == VAL_OBJ)
 
 /* ValueArray
  * This holds a dynamic array of values present in a chunk of instructions.
