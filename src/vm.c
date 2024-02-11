@@ -2,10 +2,13 @@
 #include "chunk.h"
 #include "compiler.h"
 #include "external/log.h"
+#include "memory.h"
+#include "object.h"
 #include "value.h"
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 /*
  * Global, static VM object for our interpreter.
@@ -36,9 +39,12 @@ static void runtime_error(const char *format, ...) {
   reset_vm_stack();
 }
 
-void init_vm() { reset_vm_stack(); }
+void init_vm() {
+  reset_vm_stack();
+  vm.objects = NULL;
+}
 
-void free_vm() {}
+void free_vm() { free_objects(); }
 
 void push(Value value) {
   log_trace("pushing value=%lf to stack.");
@@ -62,9 +68,25 @@ bool is_falsey(Value value) {
     return false;
   case VAL_NUMBER:
     return AS_NUMBER(value) != 0;
+  case VAL_OBJ:
+    return true;
   }
 
   return false;
+}
+
+void concatenate() {
+  ObjString *a = AS_STRING(pop());
+  ObjString *b = AS_STRING(pop());
+
+  size_t new_length = a->length + b->length;
+  char *new_chars = ALLOCATE(char, new_length + 1);
+  memcpy(new_chars, a->chars, a->length);
+  memcpy(new_chars + a->length, b->chars, b->length);
+  new_chars[new_length] = '\0';
+
+  ObjString *new_obj = take_string(new_chars, new_length);
+  push(OBJ_VAL(new_obj));
 }
 
 /*
@@ -140,7 +162,19 @@ static InterpretResult run() {
     }
 
     // binary operation +
-    case OP_ADD:
+    case OP_ADD: {
+      if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+        concatenate();
+      } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+        double a = AS_NUMBER(pop());
+        double b = AS_NUMBER(pop());
+        push(NUMBER_VAL(a + b));
+      } else {
+        runtime_error("Operands must be two strings or two numbers.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      break;
+    }
       BINARY_OP(NUMBER_VAL, +);
       break;
 

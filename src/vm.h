@@ -22,6 +22,8 @@ typedef struct {
   // pointing at the top of the stack, not at the top value,
   // but at the top most empty value.
   Value *stack_top;
+  // pointers to the head of dynamic objects created on the heap.
+  struct Obj *objects;
 } VM;
 
 /*
@@ -32,6 +34,8 @@ typedef enum {
   INTERPRET_COMPILE_ERROR,
   INTERPRET_RUNTIME_ERROR
 } InterpretResult;
+
+extern VM vm;
 
 /* Initialiser for our vm.
  *
