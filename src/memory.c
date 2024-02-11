@@ -1,4 +1,6 @@
 #include "memory.h"
+#include "object.h"
+#include "vm.h"
 
 void *reallocate(void *m_pointer, size_t m_old_size, size_t m_new_size) {
   log_trace("Called reallocate with pointer: %d, old_size: %d, new_size : %d",
@@ -15,4 +17,25 @@ void *reallocate(void *m_pointer, size_t m_old_size, size_t m_new_size) {
     exit(1);
   }
   return new_allocation;
+}
+
+static void free_object(Obj *obj) {
+  switch (obj->type) {
+
+  case OBJ_STRING: {
+    ObjString *obj_string = (ObjString *)obj;
+    FREE_ARRAY(char, obj_string->chars, obj_string->length);
+    FREE(ObjString, obj_string);
+    break;
+  }
+  }
+}
+
+void free_objects() {
+  Obj *obj = vm.objects;
+  while (obj != NULL) {
+    Obj *next = obj->next;
+    free_object(obj);
+    obj = next;
+  }
 }
