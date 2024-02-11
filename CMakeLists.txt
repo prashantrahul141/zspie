@@ -20,7 +20,7 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # all source files.
-file(GLOB SOURCES src/external/log.c src/chunk.c src/memory.c src/debug.c src/value.c src/vm.c src/app.c src/compiler.c src/scanner.c src/main.c)
+file(GLOB SOURCES src/external/log.c src/chunk.c src/memory.c src/debug.c src/value.c src/vm.c src/app.c src/compiler.c src/scanner.c src/object.c src/main.c)
 
 # include dir
 include_directories(${PROJECT_NAME} PRIVATE src/ src/external/)
