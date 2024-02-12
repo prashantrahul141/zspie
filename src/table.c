@@ -49,3 +49,21 @@ static void adjust_capacity(Table *table, size_t capacity) {
   table->capacity = capacity;
 }
 
+bool table_set(Table *table, ObjString *key, Value value) {
+  // increases array size if not enough available space.
+  if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
+    size_t capacity = GROW_CAPACITY(table->capacity);
+    adjust_capacity(table, capacity);
+  }
+
+  Entry *entry = find_entry(table->entries, table->capacity, key);
+  bool is_new_key = entry->key == NULL;
+
+  if (is_new_key) {
+    table->count++;
+  }
+
+  entry->key = key;
+  entry->value = value;
+  return is_new_key;
+}
