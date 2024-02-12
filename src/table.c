@@ -11,3 +11,15 @@ void free_table(Table *table) {
   FREE_ARRAY(Entry, table->entries, table->capacity);
   init_table(table);
 }
+
+static Entry *find_entry(Entry *entries, size_t capacity, ObjString *key) {
+  uint32_t index = key->hash % capacity;
+  while (true) {
+    Entry *entry = &entries[index];
+    if (entry->key == key || entry->key == NULL) {
+      return entry;
+    }
+    index = (index + 1) % capacity;
+  }
+};
+
