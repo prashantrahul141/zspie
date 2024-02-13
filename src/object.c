@@ -1,6 +1,7 @@
 #include "object.h"
 #include "memory.h"
 #include "stdio.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 #include <string.h>
@@ -21,6 +22,7 @@ struct ObjString *allocate_string(char *chars, size_t length, uint32_t hash) {
   string->length = length;
   string->chars = chars;
   string->hash = hash;
+  table_set(&vm.strings, string, NULL_VAL);
   return string;
 }
 
@@ -38,11 +40,22 @@ uint32_t hash_string(const char *key, size_t length) {
 
 ObjString *take_string(char *chars, size_t length) {
   uint32_t hash = hash_string(chars, length);
+
+  ObjString *interned = table_find_string(&vm.strings, chars, length, hash);
+  if (interned != NULL) {
+    FREE_ARRAY(char, chars, length + 1);
+    return interned;
+  }
   return allocate_string(chars, length, hash);
 }
 
 ObjString *copy_string(const char *chars, size_t length) {
   uint32_t hash = hash_string(chars, length);
+  ObjString *interned = table_find_string(&vm.strings, chars, length, hash);
+  if (interned != NULL) {
+    return interned;
+  }
+
   char *heap_chars = ALLOCATE(char, length + 1);
   memcpy(heap_chars, chars, length);
   heap_chars[length] = '\0';
