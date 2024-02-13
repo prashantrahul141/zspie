@@ -2,6 +2,7 @@
 #define ZSPIE_VM_H_
 
 #include "chunk.h"
+#include "table.h"
 #include "value.h"
 #include <stdint.h>
 
@@ -22,6 +23,8 @@ typedef struct {
   // pointing at the top of the stack, not at the top value,
   // but at the top most empty value.
   Value *stack_top;
+  // all string objects in hash table.
+  Table strings;
   // pointers to the head of dynamic objects created on the heap.
   struct Obj *objects;
 } VM;
