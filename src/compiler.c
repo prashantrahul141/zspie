@@ -390,6 +390,36 @@ static void string() {
       copy_string(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
+// declaration of all statement parsing functions.
+static void print_statement();
+static void statement();
+static void declaration();
+
+/*
+ * Parses print statements.
+ */
+static void print_statement() {
+  expression();
+  consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
+  emit_byte(OP_PRINT);
+}
+
+/*
+ * parses statements
+ */
+
+static void statement() {
+  if (match(TOKEN_PRINT)) {
+    print_statement();
+  }
+}
+
+/*
+ * Parses declarations
+ */
+
+static void declaration() { statement(); }
+
 /*
  * This stores all the Parse rules for Zspie.
  *
