@@ -391,9 +391,19 @@ static void string() {
 }
 
 // declaration of all statement parsing functions.
+static void expression_statement();
 static void print_statement();
 static void statement();
 static void declaration();
+
+/*
+ * Statement wrapper for expressions.
+ */
+static void expression_statement() {
+  expression();
+  consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
+  emit_byte(OP_POP);
+}
 
 /*
  * Parses print statements.
@@ -411,6 +421,8 @@ static void print_statement() {
 static void statement() {
   if (match(TOKEN_PRINT)) {
     print_statement();
+  } else {
+    expression_statement();
   }
 }
 
