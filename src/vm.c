@@ -213,10 +213,14 @@ static InterpretResult run() {
       break;
     }
 
-      // op_return instruction.
-    case OP_RETURN: {
+    case OP_PRINT: {
       print_value(pop());
       printf("\n");
+      break;
+    }
+
+      // op_return instruction.
+    case OP_RETURN: {
       return INTERPRET_OK;
     }
     }
