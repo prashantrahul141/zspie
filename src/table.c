@@ -33,7 +33,7 @@ static Entry *find_entry(Entry *entries, size_t capacity, ObjString *key) {
 
     index = (index + 1) % capacity;
   }
-};
+}
 
 static void adjust_capacity(Table *table, size_t capacity) {
   Entry *entries = ALLOCATE(Entry, capacity);
