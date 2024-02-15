@@ -23,6 +23,7 @@ typedef enum {
   OP_NOT,
   OP_NEGATE,
   OP_PRINT,
+  OP_DEFINE_GLOBAL,
   OP_RETURN,
 } OpCode;
 
