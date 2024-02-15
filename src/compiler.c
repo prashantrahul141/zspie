@@ -4,6 +4,7 @@
 #include "object.h"
 #include "scanner.h"
 #include "value.h"
+#include <stdint.h>
 
 /*
  * Struct to store state of our parser.
@@ -223,6 +224,28 @@ static void end_compiler() {
 static ParseRule *get_rule(TokenType type);
 
 /*
+ * Makes a constant
+ */
+static uint8_t indentifier_constant(Token *token) {
+  return make_constant(OBJ_VAL(copy_string(token->start, token->length)));
+}
+
+/*
+ * parses variable indentifier.
+ */
+static uint8_t parse_variable(const char *error_message) {
+  consume(TOKEN_IDENTIFIER, error_message);
+  return indentifier_constant(&parser.previous);
+}
+
+/*
+ * Defines a variable
+ */
+static void define_variable(uint8_t global) {
+  emit_bytes(OP_DEFINE_GLOBAL, global);
+}
+
+/*
  * Consumes token untill reached token with higher precedence.
  * @param precedence - precedence to consider.
  */
@@ -420,7 +443,25 @@ static void synchronize() {
 static void expression_statement();
 static void print_statement();
 static void statement();
+static void let_declaration();
 static void declaration();
+
+/*
+ * parses let variables declaration.
+ */
+static void let_declaration() {
+  uint8_t global = parse_variable("Expected variable name.");
+
+  if (match(TOKEN_EQUAL)) {
+    expression();
+  } else {
+    emit_byte(OP_NULL);
+  }
+
+  consume(TOKEN_SEMICOLON, "Expected ';' after variable declaration.");
+
+  define_variable(global);
+}
 
 /*
  * Statement wrapper for expressions.
@@ -457,7 +498,11 @@ static void statement() {
  */
 
 static void declaration() {
-  statement();
+  if (match(TOKEN_LET)) {
+    let_declaration();
+  } else {
+    statement();
+  }
 
   if (parser.panic_mode) {
     synchronize();
