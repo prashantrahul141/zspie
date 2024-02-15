@@ -43,10 +43,12 @@ static void runtime_error(const char *format, ...) {
 void init_vm() {
   reset_vm_stack();
   vm.objects = NULL;
+  init_table(&vm.globals);
   init_table(&vm.strings);
 }
 
 void free_vm() {
+  free_table(&vm.globals);
   free_table(&vm.strings);
   free_objects();
 }
@@ -101,6 +103,9 @@ static InterpretResult run() {
   // reads the current next instruction and increments the ip.
 #define READ_BYTE() (*vm.ip++)
 
+// reads next constant and converts it to strings.
+#define READ_STRING() AS_STRING(READ_CONSTANT())
+
 // reads a constant from the chunk
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
@@ -150,6 +155,13 @@ static InterpretResult run() {
     }
 
     case OP_POP: {
+      pop();
+      break;
+    }
+
+    case OP_DEFINE_GLOBAL: {
+      ObjString *name = READ_STRING();
+      table_set(&vm.globals, name, peek(0));
       pop();
       break;
     }
@@ -233,6 +245,7 @@ static InterpretResult run() {
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef BINARY_OP
 }
 

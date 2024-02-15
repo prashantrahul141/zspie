@@ -23,6 +23,8 @@ typedef struct {
   // pointing at the top of the stack, not at the top value,
   // but at the top most empty value.
   Value *stack_top;
+  // global variables
+  Table globals;
   // all string objects in hash table.
   Table strings;
   // pointers to the head of dynamic objects created on the heap.
