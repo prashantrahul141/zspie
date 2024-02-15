@@ -140,6 +140,23 @@ static void consume(TokenType type, const char *message) {
 }
 
 /*
+ * Helper function to check if the current token if of given type.
+ */
+static inline bool check(TokenType type) { return parser.current.type == type; }
+
+/*
+ * Helper function to consume token if only it matches the given token.
+ * also returns the result of matching
+ */
+static bool match(TokenType type) {
+  if (!check(type)) {
+    return false;
+  }
+  advance();
+  return true;
+}
+
+/*
  * Writes a byte to current chunk.
  * @param byte - The byte to write.
  */
