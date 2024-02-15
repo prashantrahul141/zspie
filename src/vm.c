@@ -88,8 +88,8 @@ void concatenate() {
 
   size_t new_length = a->length + b->length;
   char *new_chars = ALLOCATE(char, new_length + 1);
-  memcpy(new_chars, a->chars, a->length);
-  memcpy(new_chars + a->length, b->chars, b->length);
+  memcpy(new_chars, b->chars, b->length);
+  memcpy(new_chars + b->length, a->chars, a->length);
   new_chars[new_length] = '\0';
 
   ObjString *new_obj = take_string(new_chars, new_length);
