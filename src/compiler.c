@@ -447,6 +447,19 @@ static void let_declaration();
 static void declaration();
 
 /*
+ * Retrives named variables.
+ */
+static void named_variable(Token *token) {
+  uint8_t arg = indentifier_constant(token);
+  emit_bytes(OP_GET_GLOBAL, arg);
+}
+
+/*
+ * Retrives variables.
+ */
+static void variable() { named_variable(&parser.previous); }
+
+/*
  * parses let variables declaration.
  */
 static void let_declaration() {
@@ -533,7 +546,7 @@ ParseRule rules[] = {
     [TOKEN_GREATER_EQUAL] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_LESS] = {NULL, binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARISON},
-    [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_IDENTIFIER] = {variable, NULL, PREC_NONE},
     [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
