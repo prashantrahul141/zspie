@@ -90,14 +90,14 @@ void handle_cli(size_t argc, const char *argv[]) {
     run_file(argv[1]);
   } else {
     fprintf(stderr,
-            "\e[1mZspie\e[0m - Stack based VM, interpreter, written "
+            "\033[1mZspie\033[0m - Stack based VM, interpreter, written "
             "completely in C."
             "\n"
             "\n"
-            "\e[1mUsage:\e[0m zspie [filepath]"
+            "\033[1mUsage:\033[0m zspie [filepath]"
             "\n"
             "\n"
-            "\e[1mOptions\e[0m:"
+            "\033[1mOptions\033[0m:"
             "\n"
             "    repl - Run the interpreter without any arguments to "
             "open live repl."
