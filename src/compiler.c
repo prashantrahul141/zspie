@@ -40,7 +40,7 @@ typedef enum {
 /*
  * Short hand for non returning functions.
  */
-typedef void (*ParseFn)();
+typedef void (*ParseFn)(bool can_assign);
 
 /*
  * Struct to store a parse rule.
@@ -261,21 +261,26 @@ static void parse_precedence(Precedence precedence) {
   }
 
   // calling prefix ParseFn.
-  prefix_rule();
+  bool can_assign = precedence <= PREC_ASSIGNMENT;
+  prefix_rule(can_assign);
 
   // consuming infix expression.
   while (precedence <= get_rule(parser.current.type)->precedence) {
     advance();
     ParseFn infix_rule = get_rule(parser.previous.type)->infix;
     // call infix expression's parsefn rule.
-    infix_rule();
+    infix_rule(can_assign);
+  }
+
+  if (can_assign && match(TOKEN_EQUAL)) {
+    error("Invalid assignment.");
   }
 }
 
 /*
  * Parses binary expressions.
  */
-static void binary() {
+static void binary(bool can_assign) {
   log_trace("parsing binary expression");
 
   TokenType operator_type = parser.previous.type;
@@ -307,7 +312,7 @@ static void binary() {
 /*
  * Parses literal.
  */
-static void literal() {
+static void literal(bool can_assign) {
   log_fatal("parsing literal");
   switch (parser.previous.type) {
   case TOKEN_TRUE:
@@ -335,7 +340,7 @@ static void literal() {
 /*
  * Parses number literals.
  */
-static void number() {
+static void number(bool can_assign) {
   log_trace("parsing number expression");
   double value = strtod(parser.previous.start, NULL);
   emit_constant(NUMBER_VAL(value));
@@ -352,7 +357,7 @@ static void expression() {
 /*
  * Parses unary expression.
  */
-static void unary() {
+static void unary(bool can_assign) {
   log_trace("parsing unary expression");
 
   TokenType operator_type = parser.previous.type;
@@ -400,7 +405,7 @@ static void unary() {
 /*
  * parses grouping expression.
  */
-static void grouping() {
+static void grouping(bool can_assign) {
   log_trace("parsing grouping expression");
   expression();
   consume(TOKEN_RIGHT_PAREN, "Expected ')' after expression.");
@@ -408,7 +413,7 @@ static void grouping() {
 /*
  * Parses string literals.
  */
-static void string() {
+static void string(bool can_assign) {
   emit_constant(OBJ_VAL(
       copy_string(parser.previous.start + 1, parser.previous.length - 2)));
 }
@@ -449,15 +454,23 @@ static void declaration();
 /*
  * Retrives named variables.
  */
-static void named_variable(Token *token) {
+static void named_variable(Token *token, bool can_assign) {
   uint8_t arg = indentifier_constant(token);
-  emit_bytes(OP_GET_GLOBAL, arg);
+
+  if (can_assign && match(TOKEN_EQUAL)) {
+    expression();
+    emit_bytes(OP_SET_GLOBAL, arg);
+  } else {
+    emit_bytes(OP_GET_GLOBAL, arg);
+  }
 }
 
 /*
  * Retrives variables.
  */
-static void variable() { named_variable(&parser.previous); }
+static void variable(bool can_assign) {
+  named_variable(&parser.previous, can_assign);
+}
 
 /*
  * parses let variables declaration.
