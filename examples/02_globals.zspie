@@ -1,3 +1,6 @@
 let a = "a";
-let b = "does this work";
+let b = "b";
+print a;
+print b;
 print a + b;
+

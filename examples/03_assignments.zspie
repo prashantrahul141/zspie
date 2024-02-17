@@ -1,0 +1,6 @@
+let a = "tests are ";
+let b = "fun";
+print a + b;
+b = "not fun";
+print a + b;
+
