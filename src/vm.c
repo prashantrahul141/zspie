@@ -83,13 +83,14 @@ bool is_falsey(Value value) {
 }
 
 void concatenate() {
-  ObjString *a = AS_STRING(pop());
+
   ObjString *b = AS_STRING(pop());
+  ObjString *a = AS_STRING(pop());
 
   size_t new_length = a->length + b->length;
   char *new_chars = ALLOCATE(char, new_length + 1);
-  memcpy(new_chars, b->chars, b->length);
-  memcpy(new_chars + b->length, a->chars, a->length);
+  memcpy(new_chars, a->chars, a->length);
+  memcpy(new_chars + a->length, b->chars, b->length);
   new_chars[new_length] = '\0';
 
   ObjString *new_obj = take_string(new_chars, new_length);
@@ -159,11 +160,21 @@ static InterpretResult run() {
       break;
     }
 
+    case OP_SET_GLOBAL: {
+      ObjString *name = READ_STRING();
+      if (table_set(&vm.globals, name, peek(0))) {
+        table_delete(&vm.globals, name);
+        runtime_error("Undefined variable '%s'", name->chars);
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      break;
+    }
+
     case OP_GET_GLOBAL: {
       ObjString *name = READ_STRING();
       Value value;
       if (!table_get(&vm.globals, name, &value)) {
-        runtime_error("Undefined variable '%s'", name);
+        runtime_error("Undefined variable '%s'", name->chars);
         return INTERPRET_RUNTIME_ERROR;
       }
       push(value);
