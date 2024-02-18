@@ -1,0 +1,19 @@
+if (true) {
+  print "boolean true are true";
+}
+
+if (false) {
+  print "boolean false are false";
+}
+
+if (1) {
+  print "all non zero numbers are true.";
+}
+
+if (0) {
+  print "0's are false.";
+}
+
+if ("all strings are true") {
+  print "all strings are true.";
+}
