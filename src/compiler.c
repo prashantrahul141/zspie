@@ -288,6 +288,7 @@ static void declaration();
  * Makes a constant
  */
 static uint8_t indentifier_constant(Token *token) {
+  log_trace("making indentifier_constant");
   return make_constant(OBJ_VAL(copy_string(token->start, token->length)));
 }
 
@@ -636,9 +637,9 @@ static void named_variable(Token name, bool can_assign) {
 
   if (can_assign && match(TOKEN_EQUAL)) {
     expression();
-    emit_bytes(OP_SET_GLOBAL, arg);
+    emit_bytes(set_op, (uint8_t)arg);
   } else {
-    emit_bytes(OP_GET_GLOBAL, arg);
+    emit_bytes(get_op, (uint8_t)arg);
   }
 }
 
@@ -646,7 +647,7 @@ static void named_variable(Token name, bool can_assign) {
  * Retrives variables.
  */
 static void variable(bool can_assign) {
-  named_variable(&parser.previous, can_assign);
+  named_variable(parser.previous, can_assign);
 }
 
 /*
@@ -679,6 +680,7 @@ static void expression_statement() {
  * Parses print statements.
  */
 static void print_statement() {
+  log_trace("parsing print statement line=%d", parser.current.line);
   expression();
   consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
   emit_byte(OP_PRINT);
@@ -691,6 +693,10 @@ static void print_statement() {
 static void statement() {
   if (match(TOKEN_PRINT)) {
     print_statement();
+  } else if (match(TOKEN_LEFT_BRACE)) {
+    begin_scope();
+    block();
+    end_scope();
   } else {
     expression_statement();
   }
@@ -772,6 +778,8 @@ bool compile(const char *source, Chunk *chunk) {
   log_info("compiling source=\n%s", source);
 
   init_scanner(source);
+  Compiler compiler;
+  init_compiler(&compiler);
   compiling_chunk = chunk;
 
   parser.has_error = false;
