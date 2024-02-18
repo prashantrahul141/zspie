@@ -74,9 +74,9 @@ bool is_falsey(Value value) {
   case VAL_NULL:
     return false;
   case VAL_NUMBER:
-    return AS_NUMBER(value) != 0;
+    return AS_NUMBER(value) == 0;
   case VAL_OBJ:
-    return true;
+    return false;
   }
 
   return false;
@@ -101,14 +101,17 @@ void concatenate() {
  * Heart of our interpreter execution logic.
  */
 static InterpretResult run() {
-  // reads the current next instruction and increments the ip.
+// reads the current next instruction and increments the ip.
 #define READ_BYTE() (*vm.ip++)
 
-// reads next constant and converts it to strings.
-#define READ_STRING() AS_STRING(READ_CONSTANT())
+// reads 16 bits.
+#define READ_SHORT() (vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
 
 // reads a constant from the chunk
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+
+// reads next constant and converts it to strings.
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 
 // macros for solving binary operations
 #define BINARY_OP(value_type, op)                                              \
@@ -270,6 +273,14 @@ static InterpretResult run() {
       break;
     }
 
+    case OP_JUMP_IF_FALSE: {
+      uint16_t offset = READ_SHORT();
+      if (is_falsey(peek(0))) {
+        vm.ip += offset;
+      }
+      break;
+    }
+
       // op_return instruction.
     case OP_RETURN: {
       return INTERPRET_OK;
@@ -278,6 +289,7 @@ static InterpretResult run() {
   }
 
 #undef READ_BYTE
+#undef READ_SHORT
 #undef READ_CONSTANT
 #undef READ_STRING
 #undef BINARY_OP
