@@ -232,6 +232,16 @@ static void emit_constant(Value value) {
 }
 
 /*
+ * emits jump statements.
+ */
+static int emit_jump(uint8_t instruction) {
+  emit_byte(instruction);
+  emit_byte(0xff);
+  emit_byte(0xff);
+  return current_chunk()->count - 2;
+}
+
+/*
  * called after executing chunk for cleanup.
  */
 static void end_compiler() {
@@ -687,6 +697,35 @@ static void print_statement() {
 }
 
 /*
+ * int patches jump statements.
+ */
+static void patch_jump(int offset) {
+  // -2 for jumping the operand of jump statement.
+  int jump = current_chunk()->count - offset - 2;
+
+  if (jump > UINT16_MAX) {
+    error("Too much code to jump over.");
+  }
+
+  current_chunk()->code[offset] = (jump >> 8) & 0xff;
+  current_chunk()->code[offset + 1] = jump & 0xff;
+}
+
+/*
+ * parses if statements
+ */
+static void if_statement() {
+  log_trace("parsing if statement line=%d", parser.current.line);
+  consume(TOKEN_LEFT_PAREN, "Expected '(' after 'if'");
+  expression();
+  consume(TOKEN_RIGHT_PAREN, "Expected ')' after expression");
+
+  int then_jump = emit_jump(OP_JUMP_IF_FALSE);
+  statement();
+  patch_jump(then_jump);
+}
+
+/*
  * parses statements
  */
 
@@ -697,6 +736,8 @@ static void statement() {
     begin_scope();
     block();
     end_scope();
+  } else if (match(TOKEN_IF)) {
+    if_statement();
   } else {
     expression_statement();
   }
