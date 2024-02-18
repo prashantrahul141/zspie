@@ -292,6 +292,36 @@ static uint8_t indentifier_constant(Token *token) {
 }
 
 /*
+ * Adds locals to current scope
+ */
+static void add_local(Token name) {
+  log_trace("adding token=%.*s at line= to locals.", name.length, name.start,
+            name.line);
+  if (current_cs->local_count == UINT8_COUNT) {
+    error("Too many local variables in current scope.");
+    return;
+  }
+
+  Local *local = &current_cs->locals[current_cs->local_count++];
+  local->name = name;
+  // we dont define the depth, it is kindof used as token
+  // to mark variables uninitialised.
+  local->depth = -1;
+}
+
+/*
+ * Matches identifier names.
+ */
+static bool identifier_equal(Token *a, Token *b) {
+  log_trace("checking for identifier equality a=%.*s    b=%.*s at line=%d",
+            a->length, a->start, b->length, b->start, a->line);
+  if (a->length != b->length) {
+    return false;
+  }
+  return memcmp(a->start, b->start, a->length) == 0;
+}
+
+/*
  * parses variable indentifier.
  */
 static uint8_t parse_variable(const char *error_message) {
