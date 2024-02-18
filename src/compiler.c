@@ -519,6 +519,17 @@ static void expression() {
 }
 
 /*
+ * Parses 'blocks'
+ */
+static void block() {
+  while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+    declaration();
+  }
+
+  consume(TOKEN_RIGHT_BRACE, "Expected '}' after block.");
+}
+
+/*
  * Parses unary expression.
  */
 static void unary(bool can_assign) {
@@ -611,8 +622,17 @@ static void synchronize() {
 /*
  * Retrives named variables.
  */
-static void named_variable(Token *token, bool can_assign) {
-  uint8_t arg = indentifier_constant(token);
+static void named_variable(Token name, bool can_assign) {
+  uint8_t get_op, set_op;
+  int arg = resolve_local(current_cs, &name);
+  if (arg != -1) {
+    get_op = OP_GET_LOCAL;
+    set_op = OP_SET_LOCAL;
+  } else {
+    arg = indentifier_constant(&name);
+    get_op = OP_GET_GLOBAL;
+    set_op = OP_SET_GLOBAL;
+  }
 
   if (can_assign && match(TOKEN_EQUAL)) {
     expression();
