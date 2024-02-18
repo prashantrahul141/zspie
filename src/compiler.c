@@ -55,14 +55,40 @@ typedef struct {
   Precedence precedence;
 } ParseRule;
 
+typedef struct {
+  Token name;
+  int depth;
+} Local;
+
+/*
+ * State we need to keep track of in the compiler.
+ */
+typedef struct {
+  Local locals[UINT8_COUNT];
+  int local_count;
+  int scope_depth;
+} Compiler;
+
 // Global module level to avoid passing parser around using parameters and
 // pointers
 Parser parser;
+// Compilation state at runtime.
+Compiler *current_cs = NULL;
 // currently compiling chunk
 Chunk *compiling_chunk;
 
 // little helper function.
 static Chunk *current_chunk() { return compiling_chunk; }
+
+/*
+ * Init a compiler state.
+ */
+static void init_compiler(Compiler *compiler) {
+  log_debug("init compiler state");
+  compiler->local_count = 0;
+  compiler->scope_depth = 0;
+  current_cs = compiler;
+}
 
 /*
  * Zspie core way of reporting parsing errors to users.
