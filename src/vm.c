@@ -70,16 +70,24 @@ Value peek(size_t distance) { return vm.stack_top[-1 - distance]; }
 bool is_falsey(Value value) {
   switch (value.type) {
   case VAL_BOOL:
+    // bools are their values
     return !AS_BOOL(value);
+
   case VAL_NULL:
+    // nulls are false
     return false;
+
   case VAL_NUMBER:
+    // all non zero numbers are true and 0 is false.
     return AS_NUMBER(value) == 0;
+
   case VAL_OBJ:
+    // all objects are true.
+    return false;
+  default:
+    // everything else is false just in case.
     return false;
   }
-
-  return false;
 }
 
 void concatenate() {
@@ -270,6 +278,11 @@ static InterpretResult run() {
     case OP_PRINT: {
       print_value(pop());
       printf("\n");
+      break;
+    }
+    case OP_JUMP: {
+      uint16_t offset = READ_SHORT();
+      vm.ip += offset;
       break;
     }
 
