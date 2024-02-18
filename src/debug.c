@@ -1,6 +1,7 @@
 #include "debug.h"
 #include "chunk.h"
 #include "value.h"
+#include <stdint.h>
 
 size_t disassemble_instruction(Chunk *chunk, size_t offset) {
   printf("%04zu ", offset);
@@ -49,6 +50,10 @@ size_t disassemble_instruction(Chunk *chunk, size_t offset) {
     return simple_instruction("OP_PRINT", offset);
   case OP_RETURN:
     return simple_instruction("OP_RETURN", offset);
+  case OP_SET_LOCAL:
+    return byte_instruction("OP_SET_LOCAL", chunk, offset);
+  case OP_GET_LOCAL:
+    return byte_instruction("OP_GET_LOCAL", chunk, offset);
   case OP_SET_GLOBAL:
     return constant_instruction("OP_SET_GLOBAL", chunk, offset);
   case OP_DEFINE_GLOBAL:
@@ -81,5 +86,11 @@ size_t constant_instruction(const char *name, Chunk *chunk, size_t offset) {
   printf("%s      %d   ", name, constant);
   print_value(chunk->constants.values[constant]);
   printf("\n");
+  return offset + 2;
+}
+
+size_t byte_instruction(const char *name, Chunk *chunk, size_t offset) {
+  uint8_t slot = chunk->code[offset + 1];
+  printf("%-16s %4d\n", name, slot);
   return offset + 2;
 }
