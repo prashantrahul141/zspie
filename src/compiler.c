@@ -377,14 +377,35 @@ static void declare_variable() {
  * parses variable indentifier.
  */
 static uint8_t parse_variable(const char *error_message) {
+  log_trace("parsing variable with error message=%d", error_message);
   consume(TOKEN_IDENTIFIER, error_message);
+  declare_variable();
+
+  // if we're in a scope, we return, we dont care about the
+  // index of locals because they are not lookedup by index.
+  if (current_cs->scope_depth > 0) {
+    return 0;
+  }
   return indentifier_constant(&parser.previous);
+}
+
+/*
+ * This marks the variable as initialised by settings it depth value.
+ */
+static void mark_initialized() {
+  current_cs->locals[current_cs->local_count - 1].depth =
+      current_cs->scope_depth;
 }
 
 /*
  * Defines a variable
  */
 static void define_variable(uint8_t global) {
+  log_trace("defining variable global=%c", global);
+  if (current_cs->scope_depth > 0) {
+    mark_initialized();
+    return;
+  }
   emit_bytes(OP_DEFINE_GLOBAL, global);
 }
 
