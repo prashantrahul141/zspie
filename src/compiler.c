@@ -322,6 +322,58 @@ static bool identifier_equal(Token *a, Token *b) {
 }
 
 /*
+ * Resolves a local variable.
+ */
+static int resolve_local(Compiler *compiler_state, Token *name) {
+  log_trace("resolving a local for token=%.*s at line=%d", name->length,
+            name->start, name->line);
+  for (int i = compiler_state->local_count - 1; i >= 0; i--) {
+    Local *local = &compiler_state->locals[i];
+    if (identifier_equal(name, &local->name)) {
+      if (local->depth == -1) {
+        error("Reference to an undefined variable.");
+      }
+      log_debug("found match for local at index=%d", i);
+      return i;
+    }
+  }
+
+  log_trace("didnt found match for local.");
+  return -1;
+}
+
+/*
+ * local variables.
+ */
+static void declare_variable() {
+  log_trace("declarating a local variable.");
+  if (current_cs->scope_depth == 0) {
+    log_trace("in global scope returning.");
+    return;
+  }
+
+  Token *name = &parser.previous;
+  // check if the variable already exist in current scope.
+  for (int i = current_cs->local_count - 1; i >= 0; i--) {
+    Local *local = &current_cs->locals[i];
+
+    // break
+    // 1. reached at -1 scope,
+    // 2. "local's" index is less than current comp state.
+    if (local->depth != -1 && local->depth < current_cs->scope_depth) {
+      break;
+    }
+
+    // matching identifier.
+    if (identifier_equal(name, &local->name)) {
+      log_error("variable already exist in the current scope.");
+      error("Redeclaration of local variable.");
+    }
+  }
+  add_local(*name);
+}
+
+/*
  * parses variable indentifier.
  */
 static uint8_t parse_variable(const char *error_message) {
