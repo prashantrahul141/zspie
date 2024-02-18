@@ -1,0 +1,15 @@
+let a = 2;
+print a;
+{
+  let a = 3;
+  print a;
+
+  {
+    let a = 4;
+    print a;
+  }
+
+  print a;
+}
+
+print a;
