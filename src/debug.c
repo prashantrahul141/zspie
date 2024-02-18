@@ -60,6 +60,10 @@ size_t disassemble_instruction(Chunk *chunk, size_t offset) {
     return constant_instruction("OP_DEFINE_GLOBAL", chunk, offset);
   case OP_GET_GLOBAL:
     return constant_instruction("OP_GET_GLOBAL", chunk, offset);
+  case OP_JUMP:
+    return jump_instruction("OP_JUMP", 1, chunk, offset);
+  case OP_JUMP_IF_FALSE:
+    return jump_instruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
   default:
     printf("unknown instruction %hhu", instruction);
     return offset + 1;
@@ -93,4 +97,12 @@ size_t byte_instruction(const char *name, Chunk *chunk, size_t offset) {
   uint8_t slot = chunk->code[offset + 1];
   printf("%-16s %4d\n", name, slot);
   return offset + 2;
+}
+
+size_t jump_instruction(const char *name, int sign, Chunk *chunk,
+                        size_t offset) {
+  uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
+  jump |= chunk->code[offset + 2];
+  printf("%-16s %4zu -> %zu\n", name, offset, offset + 3 + sign * jump);
+  return offset + 3;
 }

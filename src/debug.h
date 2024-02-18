@@ -36,4 +36,10 @@ size_t constant_instruction(const char *name, Chunk *chunk, size_t offset);
  */
 size_t byte_instruction(const char *name, Chunk *chunk, size_t offset);
 
+/*
+ * used to debug jump op codes.
+ */
+size_t jump_instruction(const char *name, int sign, Chunk *chunk,
+                        size_t offset);
+
 #endif // !ZSPIE_DEBUG_H_
