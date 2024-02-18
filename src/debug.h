@@ -31,4 +31,9 @@ size_t simple_instruction(const char *name, size_t offset);
  */
 size_t constant_instruction(const char *name, Chunk *chunk, size_t offset);
 
+/*
+ * Uses to disassemble locals
+ */
+size_t byte_instruction(const char *name, Chunk *chunk, size_t offset);
+
 #endif // !ZSPIE_DEBUG_H_
