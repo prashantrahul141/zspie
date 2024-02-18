@@ -1,10 +1,11 @@
 #include "chunk.h"
-#include "debug.h"
+#include "common.h"
 #include "external/log.h"
 #include "object.h"
 #include "scanner.h"
 #include "value.h"
 #include <stdint.h>
+#include <string.h>
 
 /*
  * Struct to store state of our parser.
