@@ -277,6 +277,13 @@ static void end_scope() {
  */
 static ParseRule *get_rule(TokenType type);
 
+// declaration of all statement parsing functions.
+static void expression_statement();
+static void print_statement();
+static void statement();
+static void let_declaration();
+static void declaration();
+
 /*
  * Makes a constant
  */
@@ -497,13 +504,6 @@ static void synchronize() {
 
   advance();
 }
-
-// declaration of all statement parsing functions.
-static void expression_statement();
-static void print_statement();
-static void statement();
-static void let_declaration();
-static void declaration();
 
 /*
  * Retrives named variables.
