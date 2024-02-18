@@ -245,6 +245,33 @@ static void end_compiler() {
 }
 
 /*
+ * increments depth.
+ */
+static void begin_scope() {
+  log_trace("begin scope : line=%d", &parser.current.line);
+  current_cs->scope_depth++;
+}
+
+/*
+ * decrements depth.
+ */
+static void end_scope() {
+  log_trace("end scope : line=%d", &parser.current.line);
+  current_cs->scope_depth--;
+  // delete local declarations.
+  // untill
+  // 1. we reach the end of all declarations.
+  log_trace("deleting local variables.", &parser.current.line);
+  while (current_cs->local_count > 0 &&
+         // 2. from the entire scope.
+         current_cs->locals[current_cs->local_count - 1].depth >
+             current_cs->scope_depth) {
+    emit_byte(OP_POP);
+    current_cs->local_count--;
+  }
+}
+
+/*
  * Gets ParseRule for a type of token.
  * @param type - type of token.
  */
