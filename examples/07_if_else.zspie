@@ -1,0 +1,16 @@
+if (false) {
+} else {
+  print "boolean false are false";
+}
+
+
+if (0) {
+} else {
+  print "all non zero numbers are true.";
+}
+
+if ("string") {
+} else {
+  print "all strings are true.";
+}
+
