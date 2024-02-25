@@ -1,0 +1,9 @@
+if (true and true) {
+  print "true and true is true";
+}
+
+if (false and true) {
+} else {
+  print "right hand expression is never evaluated if the left hand expression is false.";
+}
+
