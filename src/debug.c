@@ -7,9 +7,9 @@ size_t disassemble_instruction(Chunk *chunk, size_t offset) {
   printf("%04zu ", offset);
   uint8_t instruction = chunk->code[offset];
 
-  log_debug("disassembling instruction from chunk : %p, offset : %d, "
-            "instruction : %d",
-            chunk, offset, instruction);
+  // log_debug("disassembling instruction from chunk : %p, offset : %d, "
+  // "instruction : %d",
+  // chunk, offset, instruction);
 
   if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]) {
     printf("   | ");
@@ -73,9 +73,9 @@ size_t disassemble_instruction(Chunk *chunk, size_t offset) {
 }
 
 void disassemble_chunk(Chunk *m_chunk, const char *name) {
+  log_debug("disassembling chunk : %p, name : %s", m_chunk, name);
   printf("== %s ==\n", name);
   printf("IN      L I                CI  CV\n");
-  log_debug("disassembling chunk : %p, name : %s", m_chunk, name);
 
   for (size_t offset = 0; offset < m_chunk->count;) {
     offset = disassemble_instruction(m_chunk, offset);
