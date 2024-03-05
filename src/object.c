@@ -1,4 +1,5 @@
 #include "object.h"
+#include "chunk.h"
 #include "memory.h"
 #include "stdio.h"
 #include "table.h"
@@ -38,6 +39,15 @@ uint32_t hash_string(const char *key, size_t length) {
   return hash;
 }
 
+// allocates memory for new function object.
+ObjFunction *new_function() {
+  ObjFunction *function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
+  function->arity = 0;
+  function->name = NULL;
+  init_chunk(&function->chunk);
+  return function;
+}
+
 ObjString *take_string(char *chars, size_t length) {
   uint32_t hash = hash_string(chars, length);
 
@@ -62,10 +72,17 @@ ObjString *copy_string(const char *chars, size_t length) {
   return allocate_string(heap_chars, length, hash);
 }
 
+void print_function(ObjFunction *function) {
+  printf("<fn %s>", function->name->chars);
+}
+
 void print_object(Value value) {
   switch (OBJ_TYPE(value)) {
   case OBJ_STRING:
     printf("\"%s\"", AS_CSTRING(value));
     break;
   }
+case OBJ_FUNCTION:
+  print_function(AS_FUNCTION(value));
+  break;
 }
