@@ -60,10 +60,17 @@ typedef struct {
   int depth;
 } Local;
 
+typedef enum {
+  TYPE_FUNCTION,
+  TYPE_SCRIPT,
+} FunctionType;
+
 /*
  * State we need to keep track of in the compiler.
  */
 typedef struct {
+  ObjFunction *function;
+  FunctionType type;
   Local locals[UINT8_COUNT];
   int local_count;
   int scope_depth;
@@ -78,16 +85,24 @@ Compiler *current_cs = NULL;
 Chunk *compiling_chunk;
 
 // little helper function.
-static Chunk *current_chunk() { return compiling_chunk; }
+static Chunk *current_chunk() { return &current_cs->function->chunk; }
 
 /*
  * Init a compiler state.
  */
-static void init_compiler(Compiler *compiler) {
+static void init_compiler(Compiler *compiler, FunctionType type) {
   log_debug("init compiler state");
+  compiler->function = NULL;
+  compiler->type = type;
   compiler->local_count = 0;
   compiler->scope_depth = 0;
+  compiler->function = new_function();
   current_cs = compiler;
+
+  Local *local = &current_cs->locals[current_cs->local_count++];
+  local->depth = 0;
+  local->name.start = "";
+  local->name.length = 0;
 }
 
 /*
@@ -258,14 +273,19 @@ static int emit_jump(uint8_t instruction) {
 /*
  * called after executing chunk for cleanup.
  */
-static void end_compiler() {
+static ObjFunction *end_compiler() {
   emit_return();
+  ObjFunction *function = current_cs->function;
 // some logging .
 #ifdef ZSPIE_DEBUG_MODE
   if (!parser.has_error) {
-    disassemble_chunk(current_chunk(), "code");
+    disassemble_chunk(current_chunk(), function->name != NULL
+                                           ? function->name->chars
+                                           : "<script>");
   }
 #endif // !ZSPIE_DEBUG_MODE
+
+  return function;
 }
 
 /*
@@ -938,13 +958,12 @@ static ParseRule *get_rule(TokenType type) { return &rules[type]; }
  * @param source - source strings.
  * @param chunk - pointer to the chunk to write to.
  */
-bool compile(const char *source, Chunk *chunk) {
+ObjFunction *compile(const char *source, Chunk *chunk) {
   log_info("compiling source=\n%s", source);
 
   init_scanner(source);
   Compiler compiler;
-  init_compiler(&compiler);
-  compiling_chunk = chunk;
+  init_compiler(&compiler, TYPE_SCRIPT);
 
   parser.has_error = false;
   parser.panic_mode = false;
@@ -955,8 +974,6 @@ bool compile(const char *source, Chunk *chunk) {
     declaration();
   }
 
-  consume(TOKEN_EOF, "Expected end of expression.");
-  end_compiler();
-
-  return !parser.has_error;
+  ObjFunction *function = end_compiler();
+  return parser.has_error ? NULL : function;
 }
