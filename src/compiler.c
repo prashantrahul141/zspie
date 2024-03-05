@@ -438,6 +438,9 @@ static uint8_t parse_variable(const char *error_message) {
  * This marks the variable as initialised by settings it depth value.
  */
 static void mark_initialized() {
+  if (current_cs->scope_depth == 0) {
+    return;
+  }
   current_cs->locals[current_cs->local_count - 1].depth =
       current_cs->scope_depth;
 }
@@ -575,9 +578,31 @@ static void block() {
 }
 
 /*
+ * compiles function signature and body
+ */
+static void function(FunctionType type) {
+  Compiler compiler;
+  init_compiler(&compiler, type);
+  begin_scope();
+
+  consume(TOKEN_LEFT_PAREN, "Expected '(' after function name.");
+  consume(TOKEN_RIGHT_PAREN, "Expected ')' after function parameters.");
+  consume(TOKEN_LEFT_BRACE, "Expected '{' after function signature.");
+
+  block();
+  ObjFunction *function = end_compiler();
+  emit_bytes(OP_CONSTANT, make_constant(OBJ_VAL(function)));
+}
+
+/*
  * compiler functon declaration.
  */
-static void fn_declaration() {}
+static void funDeclaration() {
+  uint8_t global = parse_variable("Expected function name.");
+  mark_initialized();
+  function(TYPE_FUNCTION);
+  define_variable(global);
+}
 
 /*
  * Parses unary expression.
