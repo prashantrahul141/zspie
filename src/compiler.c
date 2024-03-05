@@ -597,7 +597,7 @@ static void function(FunctionType type) {
 /*
  * compiler functon declaration.
  */
-static void funDeclaration() {
+static void fn_declaration() {
   uint8_t global = parse_variable("Expected function name.");
   mark_initialized();
   function(TYPE_FUNCTION);
