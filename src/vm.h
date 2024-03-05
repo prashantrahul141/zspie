@@ -2,22 +2,29 @@
 #define ZSPIE_VM_H_
 
 #include "chunk.h"
+#include "common.h"
+#include "object.h"
 #include "table.h"
 #include "value.h"
 #include <stdint.h>
 
-#define MAX_STACK_SIZE 256
+#define FRAMES_MAX 64
+#define MAX_STACK_SIZE (FRAMES_MAX * UINT8_COUNT)
+
+typedef struct {
+  ObjFunction *function;
+  uint8_t *ip;
+  Value *slots;
+} CallFrame;
 
 /*
  * Struct for our vm, it will hold the vm's state.
  */
 typedef struct {
-  // The chunk our vm is processing.
-  Chunk *chunk;
-  // instruction pointer right between the chunk array.
-  // this will always point to the next instruction which
-  // will be executed.
-  uint8_t *ip;
+  // call frames.
+  CallFrame frames[FRAMES_MAX];
+  // current frame count.
+  int frame_count;
   /// stack for the VM.
   Value stack[MAX_STACK_SIZE];
   // pointing at the top of the stack, not at the top value,

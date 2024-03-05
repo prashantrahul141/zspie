@@ -7,6 +7,6 @@
 /*
  * Compiles source strings into tokens.
  */
-ObjFunction *compile(const char *source, Chunk *chunk);
+ObjFunction *compile(const char *source);
 
 #endif // !ZSPIE_COMPILER_H_
