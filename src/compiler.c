@@ -575,6 +575,11 @@ static void block() {
 }
 
 /*
+ * compiler functon declaration.
+ */
+static void fn_declaration() {}
+
+/*
  * Parses unary expression.
  */
 static void unary(bool can_assign) {
@@ -891,7 +896,9 @@ static void statement() {
  */
 
 static void declaration() {
-  if (match(TOKEN_LET)) {
+  if (match(TOKEN_FN)) {
+    fn_declaration();
+  } else if (match(TOKEN_LET)) {
     let_declaration();
   } else {
     statement();
