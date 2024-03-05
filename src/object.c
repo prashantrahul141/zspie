@@ -73,6 +73,10 @@ ObjString *copy_string(const char *chars, size_t length) {
 }
 
 void print_function(ObjFunction *function) {
+  if (function->name == NULL) {
+    printf("<script>");
+    return;
+  }
   printf("<fn %s>", function->name->chars);
 }
 
@@ -81,8 +85,9 @@ void print_object(Value value) {
   case OBJ_STRING:
     printf("\"%s\"", AS_CSTRING(value));
     break;
+
+  case OBJ_FUNCTION:
+    print_function(AS_FUNCTION(value));
+    break;
   }
-case OBJ_FUNCTION:
-  print_function(AS_FUNCTION(value));
-  break;
 }
