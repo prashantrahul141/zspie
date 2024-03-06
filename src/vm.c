@@ -70,6 +70,38 @@ Value pop() {
 
 Value peek(size_t distance) { return vm.stack_top[-1 - distance]; }
 
+static bool call(ObjFunction *function, int args_count) {
+  if (args_count != function->arity) {
+    runtime_error("Expected %d arguments got %d.", function->arity, args_count);
+    return false;
+  }
+
+  if (vm.frame_count == FRAMES_MAX) {
+    runtime_error("Stack overflow.");
+    return false;
+  }
+
+  CallFrame *frame = &vm.frames[vm.frame_count++];
+  frame->function = function;
+  frame->ip = function->chunk.code;
+  frame->slots = vm.stack_top - args_count - 1;
+  return true;
+}
+
+static bool call_value(Value callee, int args_count) {
+  if (IS_OBJ(callee)) {
+    switch (OBJ_TYPE(callee)) {
+    case OBJ_FUNCTION:
+      return call(AS_FUNCTION(callee), args_count);
+    default:
+      break;
+    }
+  }
+
+  runtime_error("Can only call functions.");
+  return false;
+}
+
 bool is_falsey(Value value) {
   switch (value.type) {
   case VAL_BOOL:
@@ -307,6 +339,15 @@ static InterpretResult run() {
       break;
     }
 
+    case OP_CALL: {
+      int args_count = READ_BYTE();
+      if (!call_value(peek(args_count), args_count)) {
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      frame = &vm.frames[vm.frame_count - 1];
+      break;
+    }
+
       // op_return instruction.
     case OP_RETURN: {
       return INTERPRET_OK;
@@ -337,6 +378,7 @@ InterpretResult interpret(const char *source) {
   frame->function = function;
   frame->ip = function->chunk.code;
   frame->slots = vm.stack;
+  call(function, 0);
 
   return run();
 }
