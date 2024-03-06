@@ -1,0 +1,11 @@
+fn a() {
+  print "Testing stuff";
+}
+
+fn c() {
+  print "test";
+}
+
+c();
+a();
+
