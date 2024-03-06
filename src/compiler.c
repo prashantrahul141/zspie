@@ -68,7 +68,8 @@ typedef enum {
 /*
  * State we need to keep track of in the compiler.
  */
-typedef struct {
+typedef struct Compiler {
+  struct Compiler *enclosing;
   ObjFunction *function;
   FunctionType type;
   Local locals[UINT8_COUNT];
@@ -92,12 +93,17 @@ static Chunk *current_chunk() { return &current_cs->function->chunk; }
  */
 static void init_compiler(Compiler *compiler, FunctionType type) {
   log_debug("init compiler state");
+  compiler->enclosing = current_cs;
   compiler->function = NULL;
   compiler->type = type;
   compiler->local_count = 0;
   compiler->scope_depth = 0;
   compiler->function = new_function();
   current_cs = compiler;
+  if (type != TYPE_SCRIPT) {
+    current_cs->function->name =
+        copy_string(parser.previous.start, parser.previous.length);
+  }
 
   Local *local = &current_cs->locals[current_cs->local_count++];
   local->depth = 0;
@@ -284,6 +290,7 @@ static ObjFunction *end_compiler() {
                                            : "<script>");
   }
 #endif // !ZSPIE_DEBUG_MODE
+  current_cs = current_cs->enclosing;
 
   return function;
 }
@@ -567,6 +574,32 @@ static void expression() {
 }
 
 /*
+ * gets the arguments passed to a function call.
+ */
+static uint8_t argument_list() {
+  uint8_t args_count = 0;
+  if (!check(TOKEN_RIGHT_PAREN)) {
+    do {
+      expression();
+      if (args_count == 255) {
+        error("Cannot have more than 255 arguments in a function call.");
+      }
+      args_count++;
+    } while (match(TOKEN_COMMA));
+  }
+  consume(TOKEN_RIGHT_PAREN, "Expected ')' after arguments.");
+  return args_count;
+}
+
+/*
+ * Parses function calls.
+ */
+static void call(bool can_assign) {
+  uint8_t args_count = argument_list();
+  emit_bytes(OP_CALL, args_count);
+}
+
+/*
  * Parses 'blocks'
  */
 static void block() {
@@ -586,6 +619,18 @@ static void function(FunctionType type) {
   begin_scope();
 
   consume(TOKEN_LEFT_PAREN, "Expected '(' after function name.");
+  // parameters
+  if (!check(TOKEN_RIGHT_PAREN)) {
+    do {
+      current_cs->function->arity++;
+      if (current_cs->function->arity > 255) {
+        error_at_current("Cannot have more than 255 function parameters.");
+      }
+      uint8_t constant = parse_variable("Expected parameter name.");
+      define_variable(constant);
+    } while (match(TOKEN_COMMA));
+  }
+
   consume(TOKEN_RIGHT_PAREN, "Expected ')' after function parameters.");
   consume(TOKEN_LEFT_BRACE, "Expected '{' after function signature.");
 
@@ -939,7 +984,7 @@ static void declaration() {
  *
  */
 ParseRule rules[] = {
-    [TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
+    [TOKEN_LEFT_PAREN] = {grouping, call, PREC_CALL},
     [TOKEN_RIGHT_PAREN] = {NULL, NULL, PREC_NONE},
     [TOKEN_LEFT_BRACE] = {NULL, NULL, PREC_NONE},
     [TOKEN_RIGHT_BRACE] = {NULL, NULL, PREC_NONE},
