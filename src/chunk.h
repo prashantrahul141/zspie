@@ -8,6 +8,7 @@
  * the VM.
  */
 typedef enum {
+  OP_CALL,
   OP_CONSTANT,
   OP_NULL,
   OP_TRUE,
