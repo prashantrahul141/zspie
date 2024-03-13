@@ -3,56 +3,61 @@
 Zspie is a fast, easy, dynamic programming language for beginners. It has all the basic features most languages provide: expressions, variables, scopes, string, globals, if-else, for-loop, while-loop, functions. The compiler is written entirely in C which makes it really fast.
 
 ## Building
+
 The project uses Cmake as it's build system.
 
 #### Requirements:
+
 - A C compiler
 - [Git](https://git-scm.com/)
 - [Cmake](https://cmake.org/)
 - Platform specific build tools
-    - [make](https://www.gnu.org/software/make/) (linux)
-    - [MS Visual Studio](https://visualstudio.microsoft.com/) (windows)
-    - [XCode](https://developer.apple.com/xcode/) (OSX)
+  - [make](https://www.gnu.org/software/make/) (linux)
+  - [MS Visual Studio](https://visualstudio.microsoft.com/) (windows)
+  - [XCode](https://developer.apple.com/xcode/) (OSX)
 
 1. Clone the repo and cd into the project root directory.
+
 ```sh
 git clone https://github.com/prashantrahul141/zspie && cd zspie
 ```
 
 2. Run cmake to create build files for your platform.
+
 ```sh
 cmake
 ```
+
 additionally you can provide `-DCMAKE_BUILD_TYPE={configuration}` to build in `Debug`, `Release` configurations.
 
 3. Open/run your platform specific build files.
 
 - For Linux:
-just run make
+  just run make
+
 ```sh
 make
 ```
 
 - For windows:
-Open Microsoft Visual Studio Solution file.
+  Open Microsoft Visual Studio Solution file.
 
 - For OSX:
-Open XCode Solution file.
-
-
+  Open XCode Solution file.
 
 ## Using the compiler
+
 You can either use the live repl
+
 ```sh
 zspie
 ```
+
 or pass a `.zspie` file
+
 ```sh
 zspie main.zspie
 ```
-
-
-
 
 # Language documentation
 
