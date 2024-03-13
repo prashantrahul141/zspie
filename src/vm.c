@@ -56,6 +56,17 @@ static void runtime_error(const char *format, ...) {
   reset_vm_stack();
 }
 
+/*
+ * Defines Native function
+ */
+static void define_native(const char *name, NativeFn function) {
+  push(OBJ_VAL(copy_string(name, (int)strlen(name))));
+  push(OBJ_VAL(new_native(function)));
+  table_set(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+  pop();
+  pop();
+}
+
 void init_vm() {
   reset_vm_stack();
   vm.objects = NULL;
@@ -106,6 +117,15 @@ static bool call_value(Value callee, int args_count) {
     switch (OBJ_TYPE(callee)) {
     case OBJ_FUNCTION:
       return call(AS_FUNCTION(callee), args_count);
+
+    case OBJ_NATIVE: {
+      NativeFn native = AS_NATIVE(callee);
+      Value result = native(args_count, vm.stack_top - args_count);
+      vm.stack_top -= args_count + 1;
+      push(result);
+      return true;
+    }
+
     default:
       break;
     }
