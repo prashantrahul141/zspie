@@ -417,14 +417,23 @@ static InterpretResult run() {
  * @returns InterpretResult
  */
 InterpretResult interpret(const char *source) {
+  clock_t before_com = clock();
+
   ObjFunction *function = compile(source);
   if (function == NULL) {
     return INTERPRET_COMPILE_ERROR;
   }
 
-  log_info("Compilation finished. Starting execution.\n\n");
   push(OBJ_VAL(function));
-  call(function, 0);
 
-  return run();
+  log_info("Compilation finished. Starting execution.\n\n");
+  clock_t before_exec = clock();
+
+  call(function, 0);
+  InterpretResult result = run();
+
+  log_info("Compilation took : %ld", clock() - before_com);
+  log_info("Execution took : %ld", clock() - before_exec);
+
+  return result;
 }
