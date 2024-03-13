@@ -515,6 +515,30 @@ static void binary(bool can_assign) {
   parse_precedence((Precedence)(rule->precedence + 1));
 
   switch (operator_type) {
+  case TOKEN_BANG_EQUAL:
+    emit_bytes(OP_EQUAL, OP_NOT);
+    break;
+
+  case TOKEN_EQUAL_EQUAL:
+    emit_byte(OP_EQUAL);
+    break;
+
+  case TOKEN_GREATER:
+    emit_byte(OP_GREATER);
+    break;
+
+  case TOKEN_GREATER_EQUAL:
+    emit_bytes(OP_LESS, OP_NOT);
+    break;
+
+  case TOKEN_LESS:
+    emit_byte(OP_LESS);
+    break;
+
+  case TOKEN_LESS_EQUAL:
+    emit_bytes(OP_GREATER, OP_NOT);
+    break;
+
   case TOKEN_PLUS:
     emit_byte(OP_ADD);
     break;
