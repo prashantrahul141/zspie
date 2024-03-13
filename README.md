@@ -41,7 +41,20 @@ Open XCode Solution file.
 
 
 
-## Language documentation
+## Using the compiler
+You can either use the live repl
+```sh
+zspie
+```
+or pass a `.zspie` file
+```sh
+zspie main.zspie
+```
+
+
+
+
+# Language documentation
 
 ### File Extension
 
