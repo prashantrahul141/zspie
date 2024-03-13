@@ -41,9 +41,9 @@ static void runtime_error(const char *format, ...) {
 
   CallFrame *frame = &vm.frames[vm.frame_count - 1];
   size_t instruction = frame->ip - frame->function->chunk.code - 1;
-  int line = frame->function->chunk.lines[instruction];
+  size_t line = frame->function->chunk.lines[instruction];
 
-  fprintf(stderr, "[line %d] in script\n", line);
+  fprintf(stderr, "[line %zu] in script\n", line);
   log_error("[line %zu] in script\n", line);
 
   for (int i = vm.frame_count - 1; i >= 0; i--) {
