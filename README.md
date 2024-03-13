@@ -1,6 +1,6 @@
 # Zspie Lang
 
-Zspie is a dynamic programming language for absolute beginners. It has all the basic features most languages provide: expressions, variables, scopes, string, globals, if-else, for-loop, while-loop, functions. The compiler is written entirely in C which makes it really fast.
+Zspie is a fast, easy, dynamic programming language for absolute beginners. It has all the basic features most languages provide: expressions, variables, scopes, string, globals, if-else, for-loop, while-loop, functions. The compiler is written entirely in C which makes it really fast.
 
 ## Building
 The project uses Cmake as it's build system.
