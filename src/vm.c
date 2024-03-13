@@ -36,10 +36,23 @@ static void runtime_error(const char *format, ...) {
 
   CallFrame *frame = &vm.frames[vm.frame_count - 1];
   size_t instruction = frame->ip - frame->function->chunk.code - 1;
-  size_t line = frame->function->chunk.lines[instruction];
+  int line = frame->function->chunk.lines[instruction];
 
-  fprintf(stderr, "[line %zu] in script\n", line);
+  fprintf(stderr, "[line %d] in script\n", line);
   log_error("[line %zu] in script\n", line);
+
+  for (int i = vm.frame_count - 1; i >= 0; i--) {
+    CallFrame *frame = &vm.frames[i];
+    ObjFunction *function = frame->function;
+    size_t instruction = frame->ip - function->chunk.code - 1;
+    fprintf(stderr, "[line %zu] in ", function->chunk.lines[instruction]);
+    if (function->name == NULL) {
+      fprintf(stderr, "script\n");
+    } else {
+      fprintf(stderr, "%s()\n", function->name->chars);
+    }
+  }
+
   reset_vm_stack();
 }
 
@@ -350,7 +363,17 @@ static InterpretResult run() {
 
       // op_return instruction.
     case OP_RETURN: {
-      return INTERPRET_OK;
+      Value result = pop();
+      vm.frame_count--;
+      if (vm.frame_count == 0) {
+        pop();
+        return INTERPRET_OK;
+      }
+
+      vm.stack_top = frame->slots;
+      push(result);
+      frame = &vm.frames[vm.frame_count - 1];
+      break;
     }
     }
   }
@@ -373,11 +396,8 @@ InterpretResult interpret(const char *source) {
     return INTERPRET_COMPILE_ERROR;
   }
 
+  log_info("Compilation finished. Starting execution.\n\n");
   push(OBJ_VAL(function));
-  CallFrame *frame = &vm.frames[vm.frame_count++];
-  frame->function = function;
-  frame->ip = function->chunk.code;
-  frame->slots = vm.stack;
   call(function, 0);
 
   return run();
