@@ -10,6 +10,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+
+static Value clock_native(int argCount, Value *args) {
+  return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+}
 
 /*
  * Global, static VM object for our interpreter.
@@ -72,6 +77,7 @@ void init_vm() {
   vm.objects = NULL;
   init_table(&vm.globals);
   init_table(&vm.strings);
+  define_native("clock", clock_native);
 }
 
 void free_vm() {
