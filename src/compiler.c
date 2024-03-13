@@ -93,13 +93,16 @@ static Chunk *current_chunk() { return &current_cs->function->chunk; }
  */
 static void init_compiler(Compiler *compiler, FunctionType type) {
   log_debug("init compiler state");
+
   compiler->enclosing = current_cs;
   compiler->function = NULL;
   compiler->type = type;
   compiler->local_count = 0;
   compiler->scope_depth = 0;
   compiler->function = new_function();
+
   current_cs = compiler;
+
   if (type != TYPE_SCRIPT) {
     current_cs->function->name =
         copy_string(parser.previous.start, parser.previous.length);
@@ -239,7 +242,10 @@ static void emit_loop(int loop_start) {
 /*
  * Emits OP_RETURN.
  */
-static void emit_return() { emit_byte(OP_RETURN); }
+static void emit_return() {
+  emit_byte(OP_NULL);
+  emit_byte(OP_RETURN);
+}
 
 /*
  * creates a new constant, for the Chunk.
@@ -282,6 +288,7 @@ static int emit_jump(uint8_t instruction) {
 static ObjFunction *end_compiler() {
   emit_return();
   ObjFunction *function = current_cs->function;
+
 // some logging .
 #ifdef ZSPIE_DEBUG_MODE
   if (!parser.has_error) {
@@ -290,6 +297,7 @@ static ObjFunction *end_compiler() {
                                            : "<script>");
   }
 #endif // !ZSPIE_DEBUG_MODE
+  //
   current_cs = current_cs->enclosing;
 
   return function;
@@ -806,6 +814,23 @@ static void print_statement() {
 }
 
 /*
+ * Compiles function return statements.
+ */
+static void return_statement() {
+  if (current_cs->type == TYPE_SCRIPT) {
+    error("Can't return from top level.");
+  }
+
+  if (match(TOKEN_SEMICOLON)) {
+    emit_return();
+  } else {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
+    emit_byte(OP_RETURN);
+  }
+}
+
+/*
  * int patches jump statements.
  */
 static void patch_jump(int offset) {
@@ -952,6 +977,8 @@ static void statement() {
     end_scope();
   } else if (match(TOKEN_IF)) {
     if_statement();
+  } else if (match(TOKEN_RETURN)) {
+    return_statement();
   } else if (match(TOKEN_WHILE)) {
     while_statement();
   } else if (match(TOKEN_FOR)) {
@@ -1035,10 +1062,11 @@ static ParseRule *get_rule(TokenType type) { return &rules[type]; }
  * @param source - source strings.
  * @param chunk - pointer to the chunk to write to.
  */
-ObjFunction *compile(const char *source, Chunk *chunk) {
+ObjFunction *compile(const char *source) {
   log_info("compiling source=\n%s", source);
 
   init_scanner(source);
+
   Compiler compiler;
   init_compiler(&compiler, TYPE_SCRIPT);
 
