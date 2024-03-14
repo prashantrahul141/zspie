@@ -12,7 +12,7 @@ The project uses Cmake as it's build system.
 - [Git](https://git-scm.com/)
 - [Cmake](https://cmake.org/)
 - Platform specific build tools
-  - [make](https://www.gnu.org/software/make/) (linux)
+  - [Make](https://www.gnu.org/software/make/) (linux)
   - [MS Visual Studio](https://visualstudio.microsoft.com/) (windows)
   - [XCode](https://developer.apple.com/xcode/) (OSX)
 
